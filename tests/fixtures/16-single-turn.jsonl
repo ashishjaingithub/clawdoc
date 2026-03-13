@@ -1,0 +1,3 @@
+{"type":"session","timestamp":"2026-03-13T10:00:00.000Z","sessionId":"test-single-turn","agentId":"main","model":"anthropic/claude-sonnet-4-6","sessionKey":"agent:main:main"}
+{"type":"message","timestamp":"2026-03-13T10:00:05.000Z","message":{"role":"user","content":[{"type":"text","text":"What is 2+2?"}]}}
+{"type":"message","timestamp":"2026-03-13T10:00:15.000Z","message":{"role":"assistant","content":[{"type":"text","text":"2+2 = 4"}],"usage":{"inputTokens":500,"outputTokens":10,"cost":{"total":0.001650}}}}

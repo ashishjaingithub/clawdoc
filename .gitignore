@@ -1,0 +1,23 @@
+# Build/spec artifacts (not part of the published package)
+clawdoc-spec-v2.md
+claude-code-handoff.md
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Temp files from scripts
+/tmp/clawdoc_*
+
+# Test output
+tests/output/
+*.tmp
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# CI cache
+.cache/

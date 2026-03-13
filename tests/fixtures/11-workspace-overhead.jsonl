@@ -1,0 +1,7 @@
+{"type":"session","timestamp":"2026-03-13T10:00:00.000Z","sessionId":"test-workspace-overhead","agentId":"main","model":"anthropic/claude-sonnet-4-6","sessionKey":"agent:main:main"}
+{"type":"message","timestamp":"2026-03-13T10:00:05.000Z","message":{"role":"user","content":[{"type":"text","text":"What time is it?"}]}}
+{"type":"message","timestamp":"2026-03-13T10:00:38.000Z","message":{"role":"assistant","content":[{"type":"text","text":"Based on the system context available to me, the current time is 10:00 AM UTC on March 13, 2026. If you need the time in a specific timezone, let me know and I can convert it."}],"usage":{"inputTokens":25000,"outputTokens":42,"cost":{"total":0.075630},"contextTokens":128000}}}
+{"type":"message","timestamp":"2026-03-13T10:01:05.000Z","message":{"role":"user","content":[{"type":"text","text":"Thanks. What's 2 + 2?"}]}}
+{"type":"message","timestamp":"2026-03-13T10:01:38.000Z","message":{"role":"assistant","content":[{"type":"text","text":"2 + 2 = 4."}],"usage":{"inputTokens":25200,"outputTokens":10,"cost":{"total":0.075750},"contextTokens":128000}}}
+{"type":"message","timestamp":"2026-03-13T10:02:05.000Z","message":{"role":"user","content":[{"type":"text","text":"Great, that's all."}]}}
+{"type":"message","timestamp":"2026-03-13T10:02:38.000Z","message":{"role":"assistant","content":[{"type":"text","text":"You're welcome! Let me know if you need anything else."}],"usage":{"inputTokens":25350,"outputTokens":16,"cost":{"total":0.075990},"contextTokens":128000}}}
