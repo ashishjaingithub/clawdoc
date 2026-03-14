@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="1.0.0"
+VERSION="0.9.0"
 
 # prescribe.sh <diagnose-json-output>
 # Takes diagnose.sh output (file path or stdin), formats into full markdown diagnosis report.

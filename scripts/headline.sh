@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="1.0.0"
+VERSION="0.9.0"
 
 # headline.sh [--brief] <sessions-directory>
 # Scans all recent sessions (last 7 days), runs diagnose on each,
@@ -141,6 +141,7 @@ fi
 printf "\n"
 
 # Print top findings by severity (critical first, then high, then medium)
+# Strip absolute paths from evidence to avoid leaking filesystem info in shared channels
 echo "$COMBINED" | jq -r '
   sort_by(
     if .severity == "critical" then 0
@@ -152,5 +153,5 @@ echo "$COMBINED" | jq -r '
   (if .severity == "critical" then "🔴"
    elif .severity == "high" then "🔴"
    elif .severity == "medium" then "🟡"
-   else "🟢" end) + " " + .evidence
+   else "🟢" end) + " " + (.evidence | gsub("/[Uu]sers/[^/]+/"; "~/") | gsub("/home/[^/]+/"; "~/") | gsub("/private/tmp/[^/]+/"; "/tmp/"))
 ' 2>/dev/null || true

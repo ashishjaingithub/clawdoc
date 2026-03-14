@@ -13,6 +13,13 @@ Thumbs.db
 tests/output/
 *.tmp
 
+# Generated test data (not part of published package)
+tests/fixtures/stress/
+tests/fixtures/real/
+
+# Pipeline state (machine-local)
+.pipeline-state.json
+
 # Editor
 .vscode/
 .idea/

@@ -117,4 +117,4 @@ jobs:
         run: |
           count=$(ls tests/fixtures/*.jsonl | wc -l)
           echo "Fixture count: $count"
-          [ "$count" -ge 16 ] || { echo "Expected at least 16 fixtures, got $count"; exit 1; }
+          [ "$count" -ge 19 ] || { echo "Expected at least 19 fixtures, got $count"; exit 1; }

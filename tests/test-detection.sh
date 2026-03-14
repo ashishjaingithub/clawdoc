@@ -150,6 +150,11 @@ run_unit_tests() {
   echo "=== Unit tests ==="
   echo ""
 
+  # Read expected version from VERSION file
+  local EXPECTED_VERSION
+  EXPECTED_VERSION=$(cat "$SCRIPT_DIR/../VERSION" 2>/dev/null | tr -d '[:space:]')
+  EXPECTED_VERSION="${EXPECTED_VERSION:-1.0.0}"
+
   # 1. examine.sh --help exits 0
   if bash "$SCRIPTS_DIR/examine.sh" --help >/dev/null 2>&1; then
     assert_unit "examine.sh --help exits 0" "pass"
@@ -157,12 +162,12 @@ run_unit_tests() {
     assert_unit "examine.sh --help exits 0" "fail"
   fi
 
-  # 2. examine.sh --version outputs "1.0.0" and exits 0
+  # 2. examine.sh --version outputs expected version and exits 0
   ver=$(bash "$SCRIPTS_DIR/examine.sh" --version 2>/dev/null)
-  if [ "$ver" = "1.0.0" ]; then
-    assert_unit "examine.sh --version outputs 1.0.0" "pass"
+  if [ "$ver" = "$EXPECTED_VERSION" ]; then
+    assert_unit "examine.sh --version outputs $EXPECTED_VERSION" "pass"
   else
-    assert_unit "examine.sh --version outputs 1.0.0" "fail"
+    assert_unit "examine.sh --version outputs $EXPECTED_VERSION" "fail"
   fi
 
   # 3. examine.sh on healthy session outputs valid JSON with required keys
@@ -223,10 +228,10 @@ run_unit_tests() {
     # --version
     s_ver=$(bash "$spath" --version 2>/dev/null)
     s_ver_exit=$?
-    if [ "$s_ver_exit" -eq 0 ] && [ "$s_ver" = "1.0.0" ]; then
-      assert_unit "$s --version exits 0 and outputs 1.0.0" "pass"
+    if [ "$s_ver_exit" -eq 0 ] && [ "$s_ver" = "$EXPECTED_VERSION" ]; then
+      assert_unit "$s --version exits 0 and outputs $EXPECTED_VERSION" "pass"
     else
-      assert_unit "$s --version exits 0 and outputs 1.0.0" "fail"
+      assert_unit "$s --version exits 0 and outputs $EXPECTED_VERSION" "fail"
     fi
   done
 }
@@ -272,8 +277,11 @@ check "08-model-routing-waste.jsonl" "Model routing waste"             "8"      
 check "09-cron-accumulation.jsonl"  "Cron context accumulation"        "9"       ""
 check "10-compaction-damage.jsonl"  "Compaction damage"                "10"      ""
 check "11-workspace-overhead.jsonl" "Workspace token overhead"         "11"      ""
-check "12-healthy-session.jsonl"    "Healthy session — no findings"    "none"    "1,2,3,4,5,6,7,8,9,10,11"
+check "12-healthy-session.jsonl"    "Healthy session — no findings"    "none"    "1,2,3,4,5,6,7,8,9,10,11,12"
 check "13-multi-pattern.jsonl"      "Multi-pattern (1 + 4 + 6)"        "1,4,6"   ""
+check "17-task-drift-compaction.jsonl" "Task drift after compaction"    "12"      ""
+check "18-task-drift-exploration.jsonl" "Exploration spiral"            "12"      ""
+check "19-task-drift-negative.jsonl"   "No drift — stays on task"      "none"    "12"
 
 echo ""
 echo "=== Edge case tests ==="

@@ -70,6 +70,7 @@ bash scripts/history.sh ~/.openclaw/agents/main/sessions/
 | 9 | Cron context accumulation | 🟡 Medium | Cron jobs getting more expensive every run |
 | 10 | Compaction damage | 🟡 Medium | Agent forgot context after auto-compaction |
 | 11 | Workspace token overhead | 🟡 Medium | Context budget consumed before conversation starts |
+| 12 | Task drift | 🟡 Medium | Agent drifts to unrelated work after compaction, or spirals reading without editing |
 
 ## Daily Brief integration
 

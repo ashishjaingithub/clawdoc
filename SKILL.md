@@ -1,6 +1,6 @@
 ---
 name: clawdoc
-description: "Diagnose OpenClaw agent failures, cost spikes, and performance issues. Use when: task failed unexpectedly, costs seem high, agent burned tokens, debugging session problems, want a health check, reviewing agent performance, agent forgot context, agent kept retrying, agent said commands but didn't execute them, cron jobs getting expensive, heartbeat costs too high."
+description: "Diagnose OpenClaw agent failures, cost spikes, and performance issues with 12 pattern detectors. Use when: task failed unexpectedly, costs seem high, agent burned tokens, debugging session problems, want a health check, reviewing agent performance, agent forgot context, agent kept retrying, agent said commands but didn't execute them, cron jobs getting expensive, heartbeat costs too high, agent drifted off task after compaction, agent stuck reading without editing."
 user-invocable: true
 metadata:
   openclaw:
@@ -197,6 +197,7 @@ Each finding includes: what happened, evidence, estimated cost impact, and speci
 | 9 | Cron context accumulation | 🟡 Medium | Growing inputTokens across cron runs |
 | 10 | Compaction damage | 🟡 Medium | Post-compaction tool call repetition |
 | 11 | Workspace token overhead | 🟡 Medium | Baseline > 15% of context window |
+| 12 | Task drift | 🟡 Medium | Post-compaction directory divergence or 10+ reads without edits |
 
 ## Self-improving-agent integration
 

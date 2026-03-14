@@ -56,10 +56,11 @@ Current thresholds and their rationale (change only with evidence):
 |----------|-----------|-----------|
 | 1 (infinite retry) | 5+ consecutive same-tool calls | <5 is plausible legitimate retry; >5 is almost always a loop |
 | 4 (context exhaustion) | 70% of context window | Leaves 30% buffer; >90% upgrades severity to high |
-| 6 (cost spike) | $0.50/turn or $1.00/session | Sonnet costs ~$0.003/turn normally; 100-333x is clearly anomalous |
+| 6 (cost spike) | $0.50/turn high, $1.00/turn critical, $1.00/session (configurable via `CLAWDOC_COST_TURN_HIGH`, `CLAWDOC_COST_TURN_CRITICAL`, `CLAWDOC_COST_SESSION`) | Defaults calibrated for Sonnet-class; raise for Opus-class models |
 | 8 (model routing waste) | cron/heartbeat + opus/sonnet/gpt-4o | Haiku is 20-50x cheaper for identical simple tasks |
 | 9 (cron accumulation) | 2x token growth | 20% growth is noise; 2x signals structural accumulation |
 | 11 (workspace overhead) | 15% of context window | Industry guidance; >15% meaningfully shrinks working space |
+| 12 (task drift) | 3+ calls to new dirs (>50% of post-compaction) OR 10+ consecutive reads | Post-compaction: agent touching entirely new directories signals lost context. Exploration: 10+ reads without editing means no forward progress |
 
 ## Code style
 

@@ -86,5 +86,13 @@
     "severity": "medium",
     "description": "System prompt + workspace files consume >15% of context window at session start",
     "detection_key": "first_assistant_inputTokens > 0.15 * contextTokens"
+  },
+  {
+    "id": 12,
+    "name": "task-drift",
+    "category": "silent-failure",
+    "severity": "medium",
+    "description": "Agent drifts to unrelated directories after compaction, or enters exploration spiral (10+ reads without edits)",
+    "detection_key": "post_compaction_new_dirs >= 3 AND new_dir_pct >= 50% OR consecutive_read_only_tools >= 10"
   }
 ]

@@ -27,6 +27,7 @@ lint:
 	@shellcheck -x scripts/headline.sh
 	@shellcheck -x scripts/prescribe.sh
 	@shellcheck -x scripts/history.sh
+	@shellcheck -x scripts/health-check.sh
 	@shellcheck -x tests/test-detection.sh
 	@echo "All scripts passed shellcheck."
 
