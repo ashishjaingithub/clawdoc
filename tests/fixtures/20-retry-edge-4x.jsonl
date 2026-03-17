@@ -1,0 +1,11 @@
+{"type":"session","timestamp":"2026-03-13T10:00:00.000Z","sessionId":"test-retry-edge-4x","agentId":"main","model":"anthropic/claude-sonnet-4-6","sessionKey":"agent:main:main"}
+{"type":"message","timestamp":"2026-03-13T10:00:05.000Z","message":{"role":"user","content":[{"type":"text","text":"Run the build."}]}}
+{"type":"message","timestamp":"2026-03-13T10:00:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"Running the build."},{"type":"toolCall","id":"tc_001","name":"exec","input":{"command":"make build"}}],"usage":{"inputTokens":1500,"outputTokens":30,"cost":{"total":0.00500}}}}
+{"type":"message","timestamp":"2026-03-13T10:01:05.000Z","message":{"role":"toolResult","content":[{"type":"text","text":"Building..."}]}}
+{"type":"message","timestamp":"2026-03-13T10:01:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"Still building, retrying."},{"type":"toolCall","id":"tc_002","name":"exec","input":{"command":"make build"}}],"usage":{"inputTokens":2000,"outputTokens":28,"cost":{"total":0.00650}}}}
+{"type":"message","timestamp":"2026-03-13T10:02:05.000Z","message":{"role":"toolResult","content":[{"type":"text","text":"Building..."}]}}
+{"type":"message","timestamp":"2026-03-13T10:02:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"Trying again."},{"type":"toolCall","id":"tc_003","name":"exec","input":{"command":"make build"}}],"usage":{"inputTokens":2500,"outputTokens":25,"cost":{"total":0.00800}}}}
+{"type":"message","timestamp":"2026-03-13T10:03:05.000Z","message":{"role":"toolResult","content":[{"type":"text","text":"Building..."}]}}
+{"type":"message","timestamp":"2026-03-13T10:03:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"One more try."},{"type":"toolCall","id":"tc_004","name":"exec","input":{"command":"make build"}}],"usage":{"inputTokens":3000,"outputTokens":22,"cost":{"total":0.00950}}}}
+{"type":"message","timestamp":"2026-03-13T10:04:05.000Z","message":{"role":"toolResult","content":[{"type":"text","text":"Build complete."}]}}
+{"type":"message","timestamp":"2026-03-13T10:04:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"Build completed successfully."}],"usage":{"inputTokens":3500,"outputTokens":20,"cost":{"total":0.01100}}}}

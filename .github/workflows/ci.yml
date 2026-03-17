@@ -48,6 +48,9 @@ jobs:
       - name: Run test suite
         run: bash tests/test-detection.sh
 
+      - name: Check count consistency
+        run: bash scripts/check-counts.sh
+
       - name: Run shellcheck
         run: |
           shellcheck -x scripts/examine.sh
@@ -56,6 +59,10 @@ jobs:
           shellcheck -x scripts/headline.sh
           shellcheck -x scripts/prescribe.sh
           shellcheck -x scripts/history.sh
+          shellcheck -x scripts/health-check.sh
+          shellcheck -x scripts/check-deps.sh
+          shellcheck -x scripts/check-counts.sh
+          shellcheck -x scripts/generate-demo.sh
           shellcheck -x tests/test-detection.sh
 
   validate-skill:
@@ -117,4 +124,4 @@ jobs:
         run: |
           count=$(ls tests/fixtures/*.jsonl | wc -l)
           echo "Fixture count: $count"
-          [ "$count" -ge 16 ] || { echo "Expected at least 16 fixtures, got $count"; exit 1; }
+          [ "$count" -ge 38 ] || { echo "Expected at least 38 fixtures, got $count"; exit 1; }

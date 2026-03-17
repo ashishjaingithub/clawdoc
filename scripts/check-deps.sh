@@ -58,6 +58,8 @@ check_bin "jq"   "1.6+"
 check_jq_version
 check_bash_version
 
+check_bin "bc"   "any"
+
 echo ""
 echo "Standard POSIX (should be present on any system):"
 check_bin "awk"  "any"

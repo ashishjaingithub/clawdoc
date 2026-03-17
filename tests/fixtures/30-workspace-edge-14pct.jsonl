@@ -1,0 +1,5 @@
+{"type":"session","timestamp":"2026-03-13T10:00:00.000Z","sessionId":"test-workspace-edge-14pct","agentId":"main","model":"anthropic/claude-sonnet-4-6","sessionKey":"agent:main:main"}
+{"type":"message","timestamp":"2026-03-13T10:00:05.000Z","message":{"role":"user","content":[{"type":"text","text":"What's the status?"}]}}
+{"type":"message","timestamp":"2026-03-13T10:00:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"Checking the status."},{"type":"toolCall","id":"tc_001","name":"exec","input":{"command":"git status"}}],"usage":{"inputTokens":17920,"outputTokens":25,"contextTokens":128000,"cost":{"total":0.05451}}}}
+{"type":"message","timestamp":"2026-03-13T10:01:05.000Z","message":{"role":"toolResult","content":[{"type":"text","text":"On branch main\nnothing to commit, working tree clean"}]}}
+{"type":"message","timestamp":"2026-03-13T10:01:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"Everything is clean. Working tree is up to date."}],"usage":{"inputTokens":18500,"outputTokens":20,"contextTokens":128000,"cost":{"total":0.05610}}}}

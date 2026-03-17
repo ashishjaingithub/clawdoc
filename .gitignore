@@ -13,6 +13,16 @@ Thumbs.db
 tests/output/
 *.tmp
 
+# Generated test data (not part of published package)
+tests/fixtures/stress/
+tests/fixtures/real/
+
+# Pipeline/dev artifacts (not part of published package)
+.spec/
+.claude/
+.pipeline-state.json
+evals/
+
 # Editor
 .vscode/
 .idea/

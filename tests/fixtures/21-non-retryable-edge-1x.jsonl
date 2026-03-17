@@ -1,0 +1,7 @@
+{"type":"session","timestamp":"2026-03-13T10:00:00.000Z","sessionId":"test-non-retryable-edge-1x","agentId":"main","model":"anthropic/claude-sonnet-4-6","sessionKey":"agent:main:main"}
+{"type":"message","timestamp":"2026-03-13T10:00:05.000Z","message":{"role":"user","content":[{"type":"text","text":"Read the config."}]}}
+{"type":"message","timestamp":"2026-03-13T10:00:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"Reading the config."},{"type":"toolCall","id":"tc_001","name":"read","input":{}}],"usage":{"inputTokens":1500,"outputTokens":30,"cost":{"total":0.00500}}}}
+{"type":"message","timestamp":"2026-03-13T10:01:05.000Z","message":{"role":"toolResult","content":[{"type":"text","text":"Error: Missing required parameter: path"}]}}
+{"type":"message","timestamp":"2026-03-13T10:01:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"I need the file path. Let me read it with the correct path."},{"type":"toolCall","id":"tc_002","name":"read","input":{"path":"/etc/config.json"}}],"usage":{"inputTokens":2000,"outputTokens":35,"cost":{"total":0.00680}}}}
+{"type":"message","timestamp":"2026-03-13T10:02:05.000Z","message":{"role":"toolResult","content":[{"type":"text","text":"{\"key\": \"value\"}"}]}}
+{"type":"message","timestamp":"2026-03-13T10:02:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"Here is the config: key = value."}],"usage":{"inputTokens":2500,"outputTokens":20,"cost":{"total":0.00800}}}}

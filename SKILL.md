@@ -1,6 +1,7 @@
 ---
 name: clawdoc
-description: "Diagnose OpenClaw agent failures, cost spikes, and performance issues. Use when: task failed unexpectedly, costs seem high, agent burned tokens, debugging session problems, want a health check, reviewing agent performance, agent forgot context, agent kept retrying, agent said commands but didn't execute them, cron jobs getting expensive, heartbeat costs too high."
+version: 0.11.1
+description: "Diagnose OpenClaw agent failures, cost spikes, and performance issues with 14 pattern detectors. Use when: task failed unexpectedly, costs seem high, agent burned tokens, debugging session problems, want a health check, reviewing agent performance, agent forgot context, agent kept retrying, agent said commands but didn't execute them, cron jobs getting expensive, heartbeat costs too high, agent drifted off task after compaction, agent stuck reading without editing, agent running find/grep on entire filesystem, agent re-reading same file repeatedly."
 user-invocable: true
 metadata:
   openclaw:
@@ -9,6 +10,7 @@ metadata:
       bins:
         - jq
         - bash
+        - bc
 ---
 
 # clawdoc
@@ -29,7 +31,7 @@ Produces a compact, tweetable health check:
 Run: `bash {baseDir}/scripts/headline.sh ~/.openclaw/agents/main/sessions`
 
 ### `/clawdoc full` or "give me a full diagnosis"
-Runs all 11 pattern detectors and produces the complete diagnosis report with evidence and prescriptions.
+Runs all 14 pattern detectors and produces the complete diagnosis report with evidence and prescriptions.
 
 ### `/clawdoc brief` or "clawdoc one-liner for daily brief"
 Single-line summary for morning cron integration:
@@ -197,6 +199,9 @@ Each finding includes: what happened, evidence, estimated cost impact, and speci
 | 9 | Cron context accumulation | 🟡 Medium | Growing inputTokens across cron runs |
 | 10 | Compaction damage | 🟡 Medium | Post-compaction tool call repetition |
 | 11 | Workspace token overhead | 🟡 Medium | Baseline > 15% of context window |
+| 12 | Task drift | 🟡 Medium | Post-compaction directory divergence or 10+ reads without edits |
+| 13 | Unbounded walk | 🟠 High | Repeated unscoped find/grep -r flooding output |
+| 14 | Tool misuse | 🟡 Medium | Same file read 3+ times without edit, or identical search repeated |
 
 ## Self-improving-agent integration
 
