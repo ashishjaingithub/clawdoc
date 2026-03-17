@@ -104,7 +104,7 @@ for f in "${SESSION_FILES[@]}"; do
 done
 
 # Aggregate all findings
-COMBINED=$(cat "$ALL_FINDINGS_FILE" | jq -s '[.[][] ]' 2>/dev/null || echo "[]")
+COMBINED=$(jq -s '[.[][] ]' "$ALL_FINDINGS_FILE" 2>/dev/null || echo "[]")
 TOTAL_FINDINGS=$(echo "$COMBINED" | jq 'length' 2>/dev/null || echo 0)
 TOTAL_WASTE=$(echo "$COMBINED" | jq '[.[].cost_impact // 0] | add // 0' 2>/dev/null || echo 0)
 
