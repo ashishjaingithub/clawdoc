@@ -135,7 +135,7 @@ detect_infinite_retry() {
         ($outer.value.value.message.usage.cost.total // 0 | tostring)
       ]
     | join("\t")
-  ' <(jq -s '.' "$JSONL") 2>/dev/null) || return 0
+  ' <(jq -s '.' "$JSONL" 2>/dev/null) 2>/dev/null) || return 0
 
   if [[ -z "$tool_seq" ]]; then return 0; fi
 
@@ -211,7 +211,7 @@ detect_infinite_retry() {
       select(test("(?i)(error|fail|denied|timeout|not found|missing|exception|invalid)")) |
       .[0:120]
     ) // empty
-  ' <(jq -s '.' "$JSONL") 2>/dev/null) || error_snippet=""
+  ' <(jq -s '.' "$JSONL" 2>/dev/null) 2>/dev/null) || error_snippet=""
 
   local evidence
   evidence="Turns $((run_start + 1))–$((run_end + 1)): \`${tool_name}\` called ${run_count} times consecutively with the same input \`$(echo "$cmd_display" | head -c 120)\`."
@@ -257,7 +257,7 @@ detect_non_retryable_retry() {
         $msgs[$idx - 1].message as $prev
         | ($prev.content[]? | select(.type == "toolCall") | [.name, (.input | tojson | .[0:100]), $err[0:80]] | @tsv)
       else empty end
-  ' <(jq -s '.' "$JSONL") 2>/dev/null) || return 0
+  ' <(jq -s '.' "$JSONL" 2>/dev/null) 2>/dev/null) || return 0
 
   if [[ -z "$result" ]]; then return 0; fi
 
@@ -310,7 +310,7 @@ detect_tool_as_text() {
         | split("\n")[]
         | select(test("^(read|exec|write|search_web|browser_navigate|web_fetch)\\s+"))
       end
-  ' <(jq -s '.' "$JSONL") 2>/dev/null | sort | uniq -c | sort -rn) || return 0
+  ' <(jq -s '.' "$JSONL" 2>/dev/null) 2>/dev/null | sort | uniq -c | sort -rn) || return 0
 
   if [[ -z "$findings" ]]; then return 0; fi
 
@@ -349,7 +349,7 @@ detect_context_exhaustion() {
         (.message.usage.cost.total // 0 | tostring)
       ]
     | join("\t")
-  ' <(jq -s '.' "$JSONL") 2>/dev/null) || return 0
+  ' <(jq -s '.' "$JSONL" 2>/dev/null) 2>/dev/null) || return 0
 
   if [[ -z "$token_data" ]]; then return 0; fi
 
@@ -456,7 +456,7 @@ detect_subagent_replay() {
     | ($m.content // [] | .[] | select(.type == "text") | .text) as $txt
     | [$k | tostring, $txt, ($cost | tostring)]
     | @tsv
-  ' <(jq -s '.' "$JSONL") 2>/dev/null) || return 0
+  ' <(jq -s '.' "$JSONL" 2>/dev/null) 2>/dev/null) || return 0
 
   if [[ -z "$replay_data" ]]; then return 0; fi
 
@@ -530,7 +530,7 @@ detect_cost_spike() {
         (.value.value.message.content // [] | map(select(.type == "toolCall")) | .[0].name // "(no tool)")
       ]
     | join("\t")
-  ' <(jq -s '.' "$JSONL") 2>/dev/null) || return 0
+  ' <(jq -s '.' "$JSONL" 2>/dev/null) 2>/dev/null) || return 0
 
   if [[ -z "$turn_costs" ]]; then return 0; fi
 
@@ -638,7 +638,7 @@ detect_skill_miss() {
     | .text
     | select(test("command not found|not installed|No such file or directory|is not recognized as"; "i"))
     | .
-  ' <(jq -s '.' "$JSONL") 2>/dev/null) || return 0
+  ' <(jq -s '.' "$JSONL" 2>/dev/null) 2>/dev/null) || return 0
 
   if [[ -z "$findings" ]]; then return 0; fi
 
@@ -665,7 +665,7 @@ detect_skill_miss() {
           .input | (.command // .path // .file_path // "") | .[0:80])
       else "unknown" end
     ) // "unknown"
-  ' <(jq -s '.' "$JSONL") 2>/dev/null) || cmd_snippet=""
+  ' <(jq -s '.' "$JSONL" 2>/dev/null) 2>/dev/null) || cmd_snippet=""
 
   if [[ -z "$cmd_snippet" || "$cmd_snippet" == "unknown" || "$cmd_snippet" == "null" ]]; then
     # Extract the actual missing command from "command not found: <name>" pattern
@@ -725,7 +725,7 @@ detect_model_routing_waste() {
       }
     | [(.turns | tostring), (.total_cost | tostring), (.total_input_tokens | tostring)]
     | join("\t")
-  ' <(jq -s '.' "$JSONL") 2>/dev/null) || return 0
+  ' <(jq -s '.' "$JSONL" 2>/dev/null) 2>/dev/null) || return 0
 
   if [[ -z "$session_stats" ]]; then return 0; fi
 
@@ -776,7 +776,7 @@ detect_cron_accumulation() {
     .[]
     | select(.type == "message" and .message.role == "assistant")
     | (.message.usage.inputTokens // 0)
-  ' <(jq -s '.' "$JSONL") 2>/dev/null) || return 0
+  ' <(jq -s '.' "$JSONL" 2>/dev/null) 2>/dev/null) || return 0
 
   if [[ -z "$token_seq" ]]; then return 0; fi
 
@@ -840,7 +840,7 @@ detect_compaction_damage() {
         ([$m.content[]? | select(.type == "toolCall") | {name: .name, input: (.input | tojson | .[0:100])}] | tojson)
       ]
     | join("\t")
-  ' <(jq -s '.' "$JSONL") 2>/dev/null) || return 0
+  ' <(jq -s '.' "$JSONL" 2>/dev/null) 2>/dev/null) || return 0
 
   if [[ -z "$turns_data" ]]; then return 0; fi
 
@@ -933,7 +933,7 @@ detect_workspace_overhead() {
         (.message.usage.cost.total // 0 | tostring)
       ]
     | join("\t")
-  ' <(jq -s '.' "$JSONL") 2>/dev/null) || return 0
+  ' <(jq -s '.' "$JSONL" 2>/dev/null) 2>/dev/null) || return 0
 
   if [[ -z "$first_turn_data" ]]; then return 0; fi
 
@@ -958,7 +958,7 @@ detect_workspace_overhead() {
   total_cost=$(jq -r '
     [ .[] | select(.type == "message" and .message.role == "assistant") ]
     | map(.message.usage.cost.total // 0) | add // 0
-  ' <(jq -s '.' "$JSONL") 2>/dev/null) || total_cost=0
+  ' <(jq -s '.' "$JSONL" 2>/dev/null) 2>/dev/null) || total_cost=0
 
   # cost_impact: (first_input_tokens / contextTokens) * total_session_cost
   local cost_impact
@@ -1004,7 +1004,7 @@ detect_task_drift() {
        | join("|")) as $paths
     | [($idx | tostring), ($tokens | tostring), ($cost | tostring), $paths]
     | join("\t")
-  ' <(jq -s '.' "$JSONL") 2>/dev/null) || return 0
+  ' <(jq -s '.' "$JSONL" 2>/dev/null) 2>/dev/null) || return 0
 
   if [[ -z "$turns_data" ]]; then return 0; fi
 
@@ -1085,7 +1085,7 @@ detect_task_drift() {
     | ($m.content // [])[] | select(.type == "toolCall")
     | [.name, ($cost | tostring)]
     | join("\t")
-  ' <(jq -s '.' "$JSONL") 2>/dev/null) || return 0
+  ' <(jq -s '.' "$JSONL" 2>/dev/null) 2>/dev/null) || return 0
 
   if [[ -z "$tool_seq" ]]; then return 0; fi
 
@@ -1162,7 +1162,7 @@ detect_unbounded_walk() {
         ($outer.value.value.message.usage.cost.total // 0 | tostring)
       ]
     | join("\t")
-  ' <(jq -s '.' "$JSONL") 2>/dev/null) || return 0
+  ' <(jq -s '.' "$JSONL" 2>/dev/null) 2>/dev/null) || return 0
 
   local unscoped_count=0
   local unscoped_cmds=""
@@ -1223,7 +1223,7 @@ detect_unbounded_walk() {
     .[]
     | select(.type == "message" and .message.role == "toolResult")
     | [(.message.content[]? | select(.type == "text") | .text | length)] | add // 0
-  ' <(jq -s '.' "$JSONL") 2>/dev/null) || result_lengths=""
+  ' <(jq -s '.' "$JSONL" 2>/dev/null) 2>/dev/null) || result_lengths=""
 
   local doubling_run=0
   local best_doubling_run=0
@@ -1311,7 +1311,7 @@ detect_tool_misuse() {
         ($outer.value.value.message.usage.cost.total // 0 | tostring)
       ]
     | join("\t")
-  ' <(jq -s '.' "$JSONL") 2>/dev/null) || return 0
+  ' <(jq -s '.' "$JSONL" 2>/dev/null) 2>/dev/null) || return 0
 
   if [[ -z "$tool_seq" ]]; then return 0; fi
 

@@ -4,6 +4,11 @@ All notable changes to clawdoc are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.2] — 2026-03-17
+
+### Fixed
+- **Silent stderr noise on malformed JSONL** — `diagnose.sh` now suppresses `jq: parse error` messages when processing files with truncated or invalid JSON lines. All 19 process substitutions now include `2>/dev/null` on the inner `jq -s` call. Exit code remains 0 and output remains `[]` — behaviour unchanged, output now clean.
+
 ## [0.11.1] — 2026-03-16
 
 ### Added
