@@ -32,7 +32,7 @@ ACTUAL_DETECTORS=$(grep -c "^detect_.*() {" "$ROOT/scripts/diagnose.sh")
 ACTUAL_TESTS=$(bash "$ROOT/tests/test-detection.sh" 2>&1 | grep "Results:" | grep -oE '[0-9]+ passed' | grep -oE '[0-9]+')
 ACTUAL_FIXTURES=$(find "$ROOT/tests/fixtures" -name "*.jsonl" -maxdepth 1 | wc -l | tr -d ' ')
 ACTUAL_PATTERNS=$(jq 'length' "$ROOT/templates/patterns.json")
-ACTUAL_VERSION=$(cat "$ROOT/VERSION" | tr -d '[:space:]')
+ACTUAL_VERSION=$(tr -d '[:space:]' < "$ROOT/VERSION")
 
 echo "Ground truth: $ACTUAL_DETECTORS detectors, $ACTUAL_TESTS tests, $ACTUAL_FIXTURES fixtures, $ACTUAL_PATTERNS patterns, v$ACTUAL_VERSION"
 echo ""
