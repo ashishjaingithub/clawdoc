@@ -1,55 +1,76 @@
 # 🩻 clawdoc
 
-Examine agent sessions. Diagnose failures. Prescribe fixes.
+Diagnose AI agent sessions. Find failures. Prescribe fixes.
 
 [![CI](https://github.com/openclaw/clawdoc/actions/workflows/ci.yml/badge.svg)](https://github.com/openclaw/clawdoc/actions/workflows/ci.yml)
 
-## Install
+clawdoc detects 14 common failure patterns in AI agent sessions — retry loops, context exhaustion, cost spikes, task drift, and more. It works with **any agent** that produces JSONL session logs, and ships with first-class [OpenClaw](https://github.com/openclaw) integration.
+
+## Quick start
+
+**Try it instantly** — no agent sessions required:
+```bash
+git clone https://github.com/openclaw/clawdoc.git && cd clawdoc
+make demo
+```
+This generates a synthetic broken session with 6 failure patterns and runs the full diagnostic pipeline.
+
+**Diagnose any JSONL session file**:
+```bash
+bash scripts/diagnose.sh session.jsonl | bash scripts/prescribe.sh
+```
+
+**Per-turn cost breakdown**:
+```bash
+bash scripts/cost-waterfall.sh session.jsonl | jq '.[0:5]'
+```
+
+### OpenClaw integration
+
+If you use [OpenClaw](https://github.com/openclaw), clawdoc also installs as a skill with slash commands and natural language triggers:
 
 ```bash
+# Install as an OpenClaw skill
 clawhub install clawdoc
+# Or manually:
+bash install.sh
 ```
 
-Or manually:
-```bash
-git clone https://github.com/openclaw/clawdoc.git ~/.openclaw/skills/clawdoc
-cd ~/.openclaw/skills/clawdoc && bash install.sh
-```
-
-## Usage
-
-**Slash command** (from any channel):
 ```
 /clawdoc              → headline health check
 /clawdoc full         → complete diagnosis with prescriptions
 /clawdoc brief        → one-liner for daily brief crons
 ```
 
-**Try it now** — generate a synthetic broken session and diagnose it:
-```bash
-make demo
-```
-This creates a fake session with 6 failure patterns (retry loop, context exhaustion, cost spike, task drift, unbounded walk, tool misuse) and runs the full diagnostic pipeline. No real agent data needed.
+Natural language also works: *"What went wrong?"*, *"Why was that so expensive?"*, *"Give me a full diagnosis"*
 
-**Direct script usage**:
+OpenClaw sessions live at `~/.openclaw/agents/<agentId>/sessions/`. For multi-session health checks:
 ```bash
-# Health check across all sessions (last 7 days)
 bash scripts/headline.sh ~/.openclaw/agents/main/sessions/
-
-# Full diagnosis of a single session
-bash scripts/diagnose.sh session.jsonl | bash scripts/prescribe.sh
-
-# Per-turn cost breakdown
-bash scripts/cost-waterfall.sh session.jsonl | jq '.[0:5]'
-
-# Cross-session pattern recurrence
 bash scripts/history.sh ~/.openclaw/agents/main/sessions/
 ```
 
-**Natural language** (from any OpenClaw channel):
-> "What's wrong with my agent?"
-> "Why was that session so expensive?"
-> "Give me a full diagnosis"
+### Using with other agent frameworks
+
+clawdoc works with any JSONL file that follows this structure:
+
+```json
+{"type":"session","sessionId":"...","model":"...","sessionKey":"..."}
+{"type":"message","message":{"role":"assistant","content":[{"type":"toolCall","name":"read","input":{"path":"src/main.ts"}}],"usage":{"inputTokens":5000,"outputTokens":30,"cost":{"total":0.01}}}}
+{"type":"message","message":{"role":"toolResult","content":[{"type":"text","text":"file contents..."}]}}
+```
+
+The required fields per message are:
+- `type`: `"session"` (first line) or `"message"` (all others)
+- `message.role`: `"assistant"`, `"user"`, or `"toolResult"`
+- `message.content[]`: array of `{"type":"text","text":"..."}` and/or `{"type":"toolCall","name":"...","input":{...}}`
+- `message.usage`: `{inputTokens, outputTokens, cost: {total}}` (on assistant messages)
+
+Optional fields that enable specific detectors:
+- `sessionKey`: enables P5 (sub-agent replay, needs `"subagent:"` prefix), P8 (model routing waste, needs `"cron:"` prefix), P9 (cron accumulation, needs `"cron:"` prefix)
+- `message.usage.contextTokens`: enables accurate P4 (context exhaustion) threshold; defaults to 128K if absent
+
+If your agent framework uses a different log format, a small adapter script can convert it. The `dev/convert-claude-sessions.sh` script is an example for Claude Code sessions.
 
 ## Example output
 
@@ -137,17 +158,19 @@ Output: `Yesterday: 8 sessions, $3.40, 1 warning (cron context growth on daily-r
 
 ## Requirements
 
-- OpenClaw (any recent version)
 - `bash` 3.2+ (macOS system bash works; bash 5.x recommended)
 - `jq` 1.6+
 - `bc` (for floating-point arithmetic in detectors)
 - Standard POSIX tools: `awk`, `sed`, `grep`, `sort`, `uniq`, `wc`
+- OpenClaw (optional — only needed for slash command and skill integration)
 
 Verify with: `bash scripts/check-deps.sh`
 
 ## How it works
 
-clawdoc reads your local session JSONL files — already on your disk at `~/.openclaw/agents/<agentId>/sessions/`. Shell scripts detect 14 known failure patterns and output structured JSON findings. Your OpenClaw agent reads SKILL.md, runs the scripts, and synthesizes findings into a diagnosis with prescriptions. No data leaves your machine. No API keys required.
+clawdoc reads JSONL session files, runs 14 pattern detectors implemented in bash + jq, and outputs structured JSON findings. Pipe the findings through `prescribe.sh` for a formatted markdown report with actionable prescriptions. No data leaves your machine. No API keys. No network calls.
+
+When installed as an OpenClaw skill, your agent reads SKILL.md and can invoke clawdoc via `/clawdoc` or natural language. But the scripts work standalone — point them at any JSONL session file.
 
 ## Testing
 
@@ -160,9 +183,11 @@ make check-deps # verify jq, bash, awk are present
 
 ## Works with
 
-- **ClawMetry**: ClawMetry shows what happened. clawdoc explains why and how to fix it.
-- **self-improving-agent**: Writes findings to `.learnings/LEARNINGS.md` with idempotent recurrence tracking. Suggests promotion to `AGENTS.md` after 3+ recurrences across 2+ sessions.
-- **SecureClaw**: clawdoc handles behavioral and cost issues. SecureClaw handles security.
+- **Any JSONL agent logs**: Point `diagnose.sh` at any file matching the session format above
+- **OpenClaw ecosystem**: First-class integration as a skill with slash commands, natural language triggers, and session directory conventions
+- **ClawMetry** (OpenClaw): ClawMetry shows what happened. clawdoc explains why and how to fix it.
+- **self-improving-agent** (OpenClaw): Writes findings to `.learnings/LEARNINGS.md` with idempotent recurrence tracking
+- **SecureClaw** (OpenClaw): clawdoc handles behavioral and cost issues. SecureClaw handles security.
 
 ## Contributing
 

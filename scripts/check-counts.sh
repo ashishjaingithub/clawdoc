@@ -54,7 +54,7 @@ check "SKILL.md pattern table rows" "$ACTUAL_PATTERNS" "$SKILL_TABLE" "SKILL.md"
 README_TABLE=$(grep -c '^| [0-9]' "$ROOT/README.md")
 check "README.md pattern table rows" "$ACTUAL_PATTERNS" "$README_TABLE" "README.md"
 
-README_HOW=$(grep -oE 'detect [0-9]+ known' "$ROOT/README.md" | grep -oE '[0-9]+')
+README_HOW=$(grep -oE '[0-9]+ pattern detectors' "$ROOT/README.md" | head -1 | grep -oE '[0-9]+')
 check "README.md 'How it works'" "$ACTUAL_DETECTORS" "$README_HOW" "README.md"
 
 # --- Test count ---
