@@ -17,8 +17,11 @@ tests/output/
 tests/fixtures/stress/
 tests/fixtures/real/
 
-# Pipeline state (machine-local)
+# Pipeline/dev artifacts (not part of published package)
+.spec/
+.claude/
 .pipeline-state.json
+evals/
 
 # Editor
 .vscode/

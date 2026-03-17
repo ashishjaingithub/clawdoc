@@ -37,6 +37,8 @@ cp    "$SCRIPT_DIR/SKILL.md"  "$INSTALL_DIR/"
 cp    "$SCRIPT_DIR/README.md" "$INSTALL_DIR/"
 cp    "$SCRIPT_DIR/LICENSE"   "$INSTALL_DIR/"
 cp    "$SCRIPT_DIR/VERSION"   "$INSTALL_DIR/"
+cp    "$SCRIPT_DIR/Makefile"  "$INSTALL_DIR/" 2>/dev/null || true
+cp    "$SCRIPT_DIR/CHANGELOG.md" "$INSTALL_DIR/" 2>/dev/null || true
 
 # Ensure scripts are executable
 chmod +x "$INSTALL_DIR"/scripts/*.sh

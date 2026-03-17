@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════
-# clawdoc demo — run this to see all 12 detectors in action
+# clawdoc demo — run this to see all 14 detectors in action
 # ═══════════════════════════════════════════════════════════════
 #
 # Usage:
@@ -69,7 +69,7 @@ echo ""
 echo -e "${BOLD}  🩻 clawdoc — Agent Session Diagnostics${RESET}"
 echo -e "  ${DIM}Examine agent sessions. Diagnose failures. Prescribe fixes.${RESET}"
 echo ""
-echo -e "  ${DIM}Version $(cat "$ROOT_DIR/VERSION")  •  12 pattern detectors  •  38 tests${RESET}"
+echo -e "  ${DIM}Version $(cat "$ROOT_DIR/VERSION")  •  14 pattern detectors  •  57 tests${RESET}"
 echo ""
 pause
 
@@ -210,7 +210,7 @@ pause
 # DEMO 7: Running the test suite
 # ═══════════════════════════════════════════════════════════════
 
-section "7. Test suite — 38 tests, all green"
+section "7. Test suite — 57 tests, all green"
 
 narrate "Every pattern detector has true-positive, true-negative, and edge-case tests."
 echo ""
@@ -253,14 +253,15 @@ fi
 
 section "Done!"
 
-echo -e "  ${BOLD}clawdoc detects 12 failure patterns:${RESET}"
+echo -e "  ${BOLD}clawdoc detects 14 failure patterns:${RESET}"
 echo ""
-echo "   1. Infinite retry loop          7. Skill selection miss"
-echo "   2. Non-retryable error retried  8. Model routing waste"
-echo "   3. Tool calls as plain text     9. Cron context accumulation"
-echo "   4. Context window exhaustion   10. Compaction damage"
-echo "   5. Sub-agent replay storm      11. Workspace token overhead"
-echo "   6. Cost spike attribution      12. Task drift (NEW)"
+echo "   1. Infinite retry loop          8. Model routing waste"
+echo "   2. Non-retryable error retried  9. Cron context accumulation"
+echo "   3. Tool calls as plain text    10. Compaction damage"
+echo "   4. Context window exhaustion   11. Workspace token overhead"
+echo "   5. Sub-agent replay storm      12. Task drift"
+echo "   6. Cost spike attribution      13. Unbounded walk"
+echo "   7. Skill selection miss        14. Tool misuse"
 echo ""
 echo -e "  ${BOLD}Get started:${RESET}"
 echo "    bash scripts/headline.sh ~/.openclaw/agents/main/sessions/"

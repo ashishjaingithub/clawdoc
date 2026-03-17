@@ -12,7 +12,7 @@ something has gone wrong and they need to diagnose it. If clawdoc has a bug — 
 positive, a false negative, or a crashed detection script — it fails people exactly when
 they need it most.
 
-**The test suite has 35 tests for a reason. Keep them all green.**
+**The test suite has 57 tests for a reason. Keep them all green.**
 
 ---
 
@@ -29,7 +29,7 @@ clawdoc/
     history.sh            ← Cross-session pattern recurrence
     check-deps.sh         ← Dependency verification
   tests/
-    test-detection.sh     ← Full test suite (35 tests)
+    test-detection.sh     ← Full test suite (57 tests)
     fixtures/             ← Synthetic JSONL session files for testing
   SKILL.md                ← OpenClaw skill definition
   CHANGELOG.md
@@ -41,7 +41,7 @@ clawdoc/
 ## Test Commands — Memorize These
 
 ```bash
-# FULL TEST SUITE — run after every change (35 tests)
+# FULL TEST SUITE — run after every change (57 tests)
 make test
 
 # SHELLCHECK LINTING — run when modifying any .sh file
@@ -61,11 +61,12 @@ bash scripts/diagnose.sh tests/fixtures/retry-loop.jsonl
 
 ## Test Pass Requirement
 
-`make test` must exit 0 with all 35 tests passing.
+`make test` must exit 0 with all tests passing.
 `make lint` must exit 0 with shellcheck reporting no errors.
+`make check-counts` must exit 0 (verifies detector/test/fixture/version counts in docs match reality).
 
-Both must pass before any commit. There are no coverage thresholds for shell scripts,
-but every detection pattern (11 total) must have at least 3 tests:
+All three must pass before any commit. There are no coverage thresholds for shell scripts,
+but every detection pattern must have at least 3 tests:
 1. A true positive (the pattern is present, must detect it)
 2. A true negative (the pattern is absent, must NOT flag it)
 3. An edge case (borderline count, pattern almost triggers)
@@ -76,9 +77,10 @@ but every detection pattern (11 total) must have at least 3 tests:
 
 Before calling ANY task complete:
 
-- [ ] `make test` — all 35 tests pass (if adding new tests, count increases)
+- [ ] `make test` — all tests pass
 - [ ] `make lint` — shellcheck passes with no errors
-- [ ] If adding a new detection pattern: added to `diagnose.sh` AND 3 tests added to `test-detection.sh` AND a fixture JSONL added to `tests/fixtures/`
+- [ ] `make check-counts` — all hardcoded counts in docs match code reality
+- [ ] If adding a new detection pattern: added to `diagnose.sh` AND `templates/patterns.json` AND `SKILL.md` pattern table AND `README.md` pattern table AND 3 tests + fixture in `tests/`
 - [ ] If modifying an existing pattern: existing tests still pass AND edge cases reconsidered
 - [ ] If modifying `prescribe.sh`: test that each Critical/Warning finding produces a prescription
 - [ ] If modifying `headline.sh`: test that output matches the documented format exactly
@@ -188,16 +190,24 @@ echo $TOOL_CALLS | wc -l
 
 ## Pattern Thresholds — Documented Here
 
-| Pattern | Threshold | Notes |
-|---|---|---|
-| Retry loop | 5+ consecutive identical tool calls | Configurable via env var `RETRY_THRESHOLD` |
-| Context exhaustion | inputTokens > 70% of contextTokens | |
-| Model routing waste | Opus on heartbeat/cron | |
-| Cron accumulation | >20% token growth between consecutive cron runs | |
-| Workspace overhead | Workspace files > 15% of context window | |
-| Cost spike | Session cost > 2x 7-day rolling average | |
+| # | Pattern | Threshold | Notes |
+|---|---------|-----------|-------|
+| 1 | Retry loop | 5+ consecutive identical tool calls | Same tool name + input |
+| 2 | Non-retryable retry | 2+ retries of a validation error | Regex-matched error text |
+| 3 | Tool as text | 1+ line matching `^toolname\s+` without toolCall block | |
+| 4 | Context exhaustion | inputTokens > 70% of contextTokens | >90% upgrades to high severity |
+| 5 | Sub-agent replay | 3+ identical assistant messages in subagent session | Only fires on `subagent:` sessionKey |
+| 6 | Cost spike | Turn > $0.50 (high), > $1.00 (critical), session > $1.00 | Configurable via `CLAWDOC_COST_TURN_HIGH`, `CLAWDOC_COST_TURN_CRITICAL`, `CLAWDOC_COST_SESSION` |
+| 7 | Skill miss | toolResult matches `command not found` pattern | |
+| 8 | Model routing waste | cron/heartbeat sessionKey + opus/sonnet/gpt-4o model | |
+| 9 | Cron accumulation | Monotonic token growth, last > 2x first | Only fires on `cron:` sessionKey |
+| 10 | Compaction damage | >40% token drop + repeated tool calls post-compaction | Uses shared `find_compaction_idx` helper |
+| 11 | Workspace overhead | First-turn inputTokens > 15% of contextTokens | |
+| 12 | Task drift | 3+ calls to new dirs (>50% post-compaction) OR 10+ consecutive reads | Two sub-detectors |
+| 13 | Unbounded walk | 3+ unscoped recursive exec commands OR 3+ consecutive output doublings | Two sub-detectors |
+| 14 | Tool misuse | Same file read 3+ times without intervening edit OR same search 3+ times | Write/edit resets read counter |
 
-**If you change a threshold, update this table AND the test fixtures.**
+**If you change a threshold, update this table AND the test fixtures AND run `make check-counts`.**
 
 ---
 

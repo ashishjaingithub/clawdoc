@@ -1,0 +1,9 @@
+{"type":"session","timestamp":"2026-03-13T10:00:00.000Z","sessionId":"test-cron-accum-edge","agentId":"main","model":"anthropic/claude-haiku-4-5","sessionKey":"cron:daily-report"}
+{"type":"message","timestamp":"2026-03-13T10:00:05.000Z","message":{"role":"user","content":[{"type":"text","text":"Generate the daily report."}]}}
+{"type":"message","timestamp":"2026-03-13T10:00:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"Generating the report."},{"type":"toolCall","id":"tc_001","name":"exec","input":{"command":"bash scripts/report.sh"}}],"usage":{"inputTokens":1000,"outputTokens":25,"cost":{"total":0.00330}}}}
+{"type":"message","timestamp":"2026-03-13T10:01:05.000Z","message":{"role":"toolResult","content":[{"type":"text","text":"Report section 1 generated."}]}}
+{"type":"message","timestamp":"2026-03-13T10:01:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"Continuing with the report."},{"type":"toolCall","id":"tc_002","name":"exec","input":{"command":"bash scripts/report.sh --section 2"}}],"usage":{"inputTokens":1400,"outputTokens":22,"cost":{"total":0.00445}}}}
+{"type":"message","timestamp":"2026-03-13T10:02:05.000Z","message":{"role":"toolResult","content":[{"type":"text","text":"Report section 2 generated."}]}}
+{"type":"message","timestamp":"2026-03-13T10:02:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"Finishing up."},{"type":"toolCall","id":"tc_003","name":"exec","input":{"command":"bash scripts/report.sh --finalize"}}],"usage":{"inputTokens":1800,"outputTokens":20,"cost":{"total":0.00564}}}}
+{"type":"message","timestamp":"2026-03-13T10:03:05.000Z","message":{"role":"toolResult","content":[{"type":"text","text":"Report finalized."}]}}
+{"type":"message","timestamp":"2026-03-13T10:03:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"Daily report complete."}],"usage":{"inputTokens":1950,"outputTokens":15,"cost":{"total":0.00600}}}}

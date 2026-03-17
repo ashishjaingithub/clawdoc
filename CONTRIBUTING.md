@@ -73,7 +73,7 @@ Current thresholds and their rationale (change only with evidence):
 ## Running tests
 
 ```bash
-make test          # all 35 tests
+make test          # all 57 tests
 make lint          # shellcheck (requires: brew install shellcheck)
 make check-deps    # verify jq, awk, bash versions
 ```

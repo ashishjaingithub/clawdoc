@@ -4,9 +4,9 @@ set -euo pipefail
 # and the reader closes before jq finishes writing. Harmless in diagnostic context.
 trap '' PIPE
 
-VERSION="0.9.0"
+VERSION="0.11.1"
 
-# diagnose.sh — Detects 11 anti-patterns in an OpenClaw JSONL session file
+# diagnose.sh — Detects 14 anti-patterns in an OpenClaw JSONL session file
 # Usage: diagnose.sh <path-to-session.jsonl>
 # Output: JSON array of findings to stdout; progress on stderr
 
@@ -15,7 +15,7 @@ usage() {
 Usage: diagnose.sh [--help|--version] <path-to-jsonl>
 
 Description:
-  Runs all 11 pattern detectors against a session JSONL file.
+  Runs all 14 pattern detectors against a session JSONL file.
 
 Options:
   --help      Show this help message and exit
@@ -27,7 +27,7 @@ EOF
 }
 
 check_deps() {
-  for dep in jq awk; do
+  for dep in jq awk bc; do
     if ! command -v "$dep" >/dev/null 2>&1; then
       echo "Error: required dependency '$dep' not found. Install it and retry." >&2
       exit 1
@@ -54,6 +54,13 @@ JSONL="$1"
 if [[ ! -f "$JSONL" ]]; then
   echo "Error: file not found: $JSONL" >&2
   exit 1
+fi
+
+# Guard against very large files (default: 100MB)
+MAX_SIZE_BYTES="${CLAWDOC_MAX_FILE_SIZE:-104857600}"
+FILE_SIZE=$(wc -c < "$JSONL" 2>/dev/null | tr -d ' ')
+if [[ "$FILE_SIZE" -gt "$MAX_SIZE_BYTES" ]]; then
+  echo "Warning: file is $(( FILE_SIZE / 1048576 ))MB — processing may be slow and memory-intensive. Set CLAWDOC_MAX_FILE_SIZE to override the ${MAX_SIZE_BYTES}-byte limit." >&2
 fi
 
 FINDINGS=()
@@ -1133,6 +1140,336 @@ detect_task_drift() {
 }
 
 # ---------------------------------------------------------------------------
+# Detector 13: detect_unbounded_walk
+# ---------------------------------------------------------------------------
+detect_unbounded_walk() {
+  echo "[diagnose] running detect_unbounded_walk..." >&2
+
+  # --- Sub-detector A: Repeated unscoped recursive commands ---
+  # Extract exec tool calls and their commands
+  local exec_cmds
+  exec_cmds=$(jq -r '
+    to_entries
+    | map(select(.value.type == "message" and .value.message.role == "assistant"))
+    | to_entries
+    | .[]
+    | . as $outer
+    | .value.value.message.content[]?
+    | select(.type == "toolCall" and .name == "exec")
+    | [
+        ($outer.key | tostring),
+        (.input.command // ""),
+        ($outer.value.value.message.usage.cost.total // 0 | tostring)
+      ]
+    | join("\t")
+  ' <(jq -s '.' "$JSONL") 2>/dev/null) || return 0
+
+  local unscoped_count=0
+  local unscoped_cmds=""
+  local unscoped_cost=0
+  local first_turn=0
+  local last_turn=0
+
+  if [[ -n "$exec_cmds" ]]; then
+    while IFS=$'\t' read -r turn_idx cmd cost; do
+      [[ -z "$cmd" ]] && continue
+
+      # Check if command contains a recursive filesystem operation
+      local is_recursive=0
+      if echo "$cmd" | grep -qE '\bfind\b'; then
+        is_recursive=1
+      elif echo "$cmd" | grep -qE '\bgrep\s+(-[a-zA-Z]*r|-[a-zA-Z]*R|--include)\b'; then
+        is_recursive=1
+      elif echo "$cmd" | grep -qE '\bls\s+(-[a-zA-Z]*R)\b'; then
+        is_recursive=1
+      elif echo "$cmd" | grep -qE '\btree\b'; then
+        is_recursive=1
+      elif echo "$cmd" | grep -qE '\bdu\s+(-[a-zA-Z]*a)\b'; then
+        is_recursive=1
+      fi
+
+      if [[ "$is_recursive" -eq 0 ]]; then continue; fi
+
+      # Check for scope limiters that make it safe
+      local is_scoped=0
+      if echo "$cmd" | grep -qE '(-maxdepth|-L\s+[0-9])'; then
+        is_scoped=1
+      elif echo "$cmd" | grep -qE '\|\s*(head|tail|wc)\b'; then
+        is_scoped=1
+      fi
+
+      if [[ "$is_scoped" -eq 0 ]]; then
+        unscoped_count=$((unscoped_count + 1))
+        if [[ "$unscoped_count" -eq 1 ]]; then
+          first_turn=$turn_idx
+        fi
+        last_turn=$turn_idx
+        unscoped_cost=$(echo "$unscoped_cost + $cost" | bc 2>/dev/null || echo "$unscoped_cost")
+        local cmd_short
+        cmd_short=$(echo "$cmd" | head -c 80)
+        if [[ -n "$unscoped_cmds" ]]; then
+          unscoped_cmds="${unscoped_cmds}, \`${cmd_short}\`"
+        else
+          unscoped_cmds="\`${cmd_short}\`"
+        fi
+      fi
+    done <<< "$exec_cmds"
+  fi
+
+  # --- Sub-detector B: Exponential output growth ---
+  # Track toolResult text lengths across consecutive turns
+  local result_lengths
+  result_lengths=$(jq -r '
+    .[]
+    | select(.type == "message" and .message.role == "toolResult")
+    | [(.message.content[]? | select(.type == "text") | .text | length)] | add // 0
+  ' <(jq -s '.' "$JSONL") 2>/dev/null) || result_lengths=""
+
+  local doubling_run=0
+  local best_doubling_run=0
+  local prev_len=0
+
+  if [[ -n "$result_lengths" ]]; then
+    while read -r len; do
+      if [[ "$prev_len" -gt 0 && "$len" -ge $((prev_len * 2)) ]]; then
+        doubling_run=$((doubling_run + 1))
+        if [[ "$doubling_run" -gt "$best_doubling_run" ]]; then
+          best_doubling_run=$doubling_run
+        fi
+      else
+        doubling_run=0
+      fi
+      prev_len=$len
+    done <<< "$result_lengths"
+  fi
+
+  # --- Combine: either sub-detector triggers ---
+  local triggered_a=0
+  local triggered_b=0
+
+  if [[ "$unscoped_count" -ge 3 ]]; then
+    triggered_a=1
+  fi
+  if [[ "$best_doubling_run" -ge 3 ]]; then
+    triggered_b=1
+  fi
+
+  if [[ "$triggered_a" -eq 0 && "$triggered_b" -eq 0 ]]; then return 0; fi
+
+  local evidence=""
+  local prescription=""
+  local cost_impact=0
+
+  if [[ "$triggered_a" -eq 1 && "$triggered_b" -eq 1 ]]; then
+    local cost_rounded
+    cost_rounded=$(printf "%.2f" "$unscoped_cost")
+    evidence="Agent ran ${unscoped_count} unscoped recursive commands (${unscoped_cmds}) across turns $((first_turn + 1))–$((last_turn + 1)), and tool output sizes doubled ${best_doubling_run} consecutive times — an unbounded filesystem walk with exponentially growing output."
+    prescription="Agent ran ${unscoped_count} recursive commands without scope limits, burning \$${cost_rounded}. Each successive output was larger than the last. Scope recursive commands with \`-maxdepth\`, target specific directories instead of \`/\`, and pipe to \`| head -50\` to cap output size."
+    cost_impact=$unscoped_cost
+  elif [[ "$triggered_a" -eq 1 ]]; then
+    local cost_rounded
+    cost_rounded=$(printf "%.2f" "$unscoped_cost")
+    evidence="Agent ran ${unscoped_count} unscoped recursive commands (${unscoped_cmds}) across turns $((first_turn + 1))–$((last_turn + 1)) without \`-maxdepth\` or output limits — an unbounded filesystem walk."
+    prescription="Agent ran ${unscoped_count} recursive commands without scope limits, burning \$${cost_rounded}. Use \`-maxdepth\` with \`find\`, target specific directories instead of \`/\`, and pipe to \`| head -50\` to cap output size."
+    cost_impact=$unscoped_cost
+  else
+    evidence="Tool output sizes doubled ${best_doubling_run} consecutive times — exponential output growth indicating an unbounded operation."
+    prescription="Tool output kept doubling (${best_doubling_run} consecutive doublings). The agent is reading progressively larger results without limiting scope. Pipe commands to \`| head\` or \`| tail\`, target specific directories, or use more selective queries."
+  fi
+
+  add_finding "$(jq -nc \
+    --arg pattern "unbounded-walk" \
+    --argjson pattern_id 13 \
+    --arg severity "high" \
+    --arg evidence "$evidence" \
+    --argjson cost_impact "$(printf '%.6f' "$cost_impact")" \
+    --arg prescription "$prescription" \
+    '{pattern:$pattern,pattern_id:$pattern_id,severity:$severity,evidence:$evidence,cost_impact:$cost_impact,prescription:$prescription}')"
+}
+
+# ---------------------------------------------------------------------------
+# Detector 14: detect_tool_misuse
+# ---------------------------------------------------------------------------
+detect_tool_misuse() {
+  echo "[diagnose] running detect_tool_misuse..." >&2
+
+  # Extract tool calls in order: turn_index, tool_name, file_path, cost
+  # file_path comes from .input.path, .input.file_path, or .input.file
+  local tool_seq
+  tool_seq=$(jq -r '
+    to_entries
+    | map(select(.value.type == "message" and .value.message.role == "assistant"))
+    | to_entries
+    | .[]
+    | . as $outer
+    | .value.value.message.content[]?
+    | select(.type == "toolCall")
+    | [
+        ($outer.key | tostring),
+        .name,
+        (.input.path // .input.file_path // .input.file // ""),
+        ($outer.value.value.message.usage.cost.total // 0 | tostring)
+      ]
+    | join("\t")
+  ' <(jq -s '.' "$JSONL") 2>/dev/null) || return 0
+
+  if [[ -z "$tool_seq" ]]; then return 0; fi
+
+  # --- Sub-detector A: Redundant file reads ---
+  # Track reads per file path, reset count when a write/edit touches the same file.
+  # Use awk to process the stream: for each (read|Read) of a file, increment counter.
+  # For each (write|Write|edit|Edit) of a file, reset counter. Track the worst offender.
+
+  local worst_read
+  worst_read=$(echo "$tool_seq" | awk -F'\t' '
+  BEGIN {
+    best_file = ""
+    best_count = 0
+    best_cost = 0
+    best_first_turn = 0
+    best_last_turn = 0
+  }
+  {
+    turn = $1+0
+    tool = $2
+    fpath = $3
+    cost = $4+0
+
+    if (fpath == "") next
+
+    # Write/edit resets the counter for this file
+    if (tool == "write" || tool == "Write" || tool == "edit" || tool == "Edit") {
+      delete read_count[fpath]
+      delete read_cost[fpath]
+      delete read_first[fpath]
+      delete read_last[fpath]
+      next
+    }
+
+    # Read increments the counter
+    if (tool == "read" || tool == "Read") {
+      read_count[fpath]++
+      read_cost[fpath] += cost
+      if (read_count[fpath] == 1) read_first[fpath] = turn
+      read_last[fpath] = turn
+
+      if (read_count[fpath] > best_count) {
+        best_count = read_count[fpath]
+        best_file = fpath
+        best_cost = read_cost[fpath]
+        best_first_turn = read_first[fpath]
+        best_last_turn = read_last[fpath]
+      }
+    }
+  }
+  END {
+    if (best_count >= 3) {
+      printf "%s\t%d\t%.6f\t%d\t%d\n", best_file, best_count, best_cost, best_first_turn, best_last_turn
+    }
+  }
+  ')
+
+  # --- Sub-detector B: Duplicate searches ---
+  # Track identical Glob/Grep calls (same tool + same pattern/path input)
+  local worst_search
+  worst_search=$(echo "$tool_seq" | awk -F'\t' '
+  BEGIN {
+    best_key = ""
+    best_count = 0
+    best_cost = 0
+  }
+  {
+    tool = $2
+    fpath = $3
+    cost = $4+0
+
+    if (tool != "Glob" && tool != "glob" && tool != "Grep" && tool != "grep") next
+
+    key = tool "|" fpath
+    search_count[key]++
+    search_cost[key] += cost
+
+    if (search_count[key] > best_count) {
+      best_count = search_count[key]
+      best_key = key
+      best_cost = search_cost[key]
+    }
+  }
+  END {
+    if (best_count >= 3) {
+      printf "%s\t%d\t%.6f\n", best_key, best_count, best_cost
+    }
+  }
+  ')
+
+  # --- Combine results ---
+  local triggered_a=0
+  local triggered_b=0
+
+  if [[ -n "$worst_read" ]]; then
+    triggered_a=1
+  fi
+  if [[ -n "$worst_search" ]]; then
+    triggered_b=1
+  fi
+
+  if [[ "$triggered_a" -eq 0 && "$triggered_b" -eq 0 ]]; then return 0; fi
+
+  local evidence=""
+  local prescription=""
+  local cost_impact=0
+
+  if [[ "$triggered_a" -eq 1 ]]; then
+    local file_path read_count read_cost first_turn last_turn
+    file_path=$(echo "$worst_read" | cut -f1)
+    read_count=$(echo "$worst_read" | cut -f2)
+    read_cost=$(echo "$worst_read" | cut -f3)
+    first_turn=$(echo "$worst_read" | cut -f4)
+    last_turn=$(echo "$worst_read" | cut -f5)
+    cost_impact=$read_cost
+
+    local cost_rounded
+    cost_rounded=$(printf "%.2f" "$read_cost")
+
+    if [[ "$triggered_b" -eq 1 ]]; then
+      local search_key search_count search_cost
+      search_key=$(echo "$worst_search" | cut -f1)
+      search_count=$(echo "$worst_search" | cut -f2)
+      search_cost=$(echo "$worst_search" | cut -f3)
+      cost_impact=$(echo "$read_cost + $search_cost" | bc 2>/dev/null || echo "$read_cost")
+      cost_rounded=$(printf "%.2f" "$cost_impact")
+
+      evidence="\`${file_path}\` was read ${read_count} times (turns $((first_turn + 1))–$((last_turn + 1))) without being edited in between — the agent kept re-reading the same unchanged file. Additionally, \`${search_key}\` was searched ${search_count} times with identical parameters."
+      prescription="Agent read \`${file_path}\` ${read_count} times without editing it, wasting \$${cost_rounded}. The file content was identical each time. Store important details from a file read in your working memory instead of re-reading the same file repeatedly."
+    else
+      evidence="\`${file_path}\` was read ${read_count} times (turns $((first_turn + 1))–$((last_turn + 1))) without being edited in between — the agent kept re-reading the same unchanged file, wasting tokens on content it already had in context."
+      prescription="Agent read \`${file_path}\` ${read_count} times without editing it, wasting \$${cost_rounded}. The file content was identical each time. The agent should retain information from previous reads instead of re-reading unchanged files."
+    fi
+  else
+    local search_key search_count search_cost
+    search_key=$(echo "$worst_search" | cut -f1)
+    search_count=$(echo "$worst_search" | cut -f2)
+    search_cost=$(echo "$worst_search" | cut -f3)
+    cost_impact=$search_cost
+
+    local cost_rounded
+    cost_rounded=$(printf "%.2f" "$search_cost")
+
+    evidence="\`${search_key}\` was searched ${search_count} times with identical parameters — the agent ran the same search query repeatedly."
+    prescription="Agent ran the same \`${search_key}\` search ${search_count} times, wasting \$${cost_rounded}. Search results don't change within a session — use the results from the first search instead of repeating it."
+  fi
+
+  add_finding "$(jq -nc \
+    --arg pattern "tool-misuse" \
+    --argjson pattern_id 14 \
+    --arg severity "medium" \
+    --arg evidence "$evidence" \
+    --argjson cost_impact "$(printf '%.6f' "$cost_impact")" \
+    --arg prescription "$prescription" \
+    '{pattern:$pattern,pattern_id:$pattern_id,severity:$severity,evidence:$evidence,cost_impact:$cost_impact,prescription:$prescription}')"
+}
+
+# ---------------------------------------------------------------------------
 # Run all detectors
 # ---------------------------------------------------------------------------
 detect_infinite_retry
@@ -1147,6 +1484,8 @@ detect_cron_accumulation
 detect_compaction_damage
 detect_workspace_overhead
 detect_task_drift
+detect_unbounded_walk
+detect_tool_misuse
 
 # ---------------------------------------------------------------------------
 # Output JSON array

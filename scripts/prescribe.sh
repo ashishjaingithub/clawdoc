@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="0.9.0"
+VERSION="0.11.1"
 
 # prescribe.sh <diagnose-json-output>
 # Takes diagnose.sh output (file path or stdin), formats into full markdown diagnosis report.
@@ -123,7 +123,7 @@ if [ "$HIGH_COUNT" -gt 0 ]; then
     echo "### Findings"
     echo ""
   fi
-  echo "#### 🔴 High"
+  echo "#### 🟠 High"
   echo ""
   echo "$INPUT" | jq -r '
     .[] | select(.severity == "high") |
@@ -176,7 +176,7 @@ echo "$INPUT" | jq -r '
   sort_by(-.cost_impact // 0) | to_entries[] |
   (.key + 1 | tostring) + ". [" +
   (if .value.severity == "critical" then "🔴 CRITICAL"
-   elif .value.severity == "high" then "🔴 HIGH"
+   elif .value.severity == "high" then "🟠 HIGH"
    elif .value.severity == "medium" then "🟡 MEDIUM"
    else "🟢 LOW" end) + " — Pattern " + (.value.pattern_id | tostring) + "] " +
   .value.prescription

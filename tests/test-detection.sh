@@ -277,11 +277,51 @@ check "08-model-routing-waste.jsonl" "Model routing waste"             "8"      
 check "09-cron-accumulation.jsonl"  "Cron context accumulation"        "9"       ""
 check "10-compaction-damage.jsonl"  "Compaction damage"                "10"      ""
 check "11-workspace-overhead.jsonl" "Workspace token overhead"         "11"      ""
-check "12-healthy-session.jsonl"    "Healthy session — no findings"    "none"    "1,2,3,4,5,6,7,8,9,10,11,12"
+check "12-healthy-session.jsonl"    "Healthy session — no findings"    "none"    "1,2,3,4,5,6,7,8,9,10,11,12,13,14"
 check "13-multi-pattern.jsonl"      "Multi-pattern (1 + 4 + 6)"        "1,4,6"   ""
 check "17-task-drift-compaction.jsonl" "Task drift after compaction"    "12"      ""
 check "18-task-drift-exploration.jsonl" "Exploration spiral"            "12"      ""
 check "19-task-drift-negative.jsonl"   "No drift — stays on task"      "none"    "12"
+
+echo ""
+echo "=== Edge case tests (per-detector boundary) ==="
+echo ""
+
+# Edge-case fixtures: each sits just below the detection threshold
+check "20-retry-edge-4x.jsonl"         "Retry 4x — below threshold (5)"           "none" "1"
+check "21-non-retryable-edge-1x.jsonl" "Non-retryable 1x — below threshold (2)"   "none" "2"
+check "22-tool-as-text-edge.jsonl"     "Tool names in text but not tool-as-text"   "none" "3"
+check "23-context-edge-69pct.jsonl"    "Context 69% — below threshold (70%)"       "none" "4"
+check "24-subagent-edge-2x.jsonl"      "Subagent replay 2x — below threshold (3)" "none" "5"
+check "25-cost-edge-below.jsonl"       "Cost below thresholds (0.49/0.86)"         "none" "6"
+check "26-skill-miss-edge.jsonl"       "Test failures — not skill-miss pattern"    "none" "7"
+check "27-model-routing-edge.jsonl"    "Cron with cheap model — no waste"          "none" "8"
+check "28-cron-accum-edge.jsonl"       "Cron tokens <2x growth — below threshold"  "none" "9"
+check "29-compaction-edge.jsonl"       "Compaction but no repeated tools after"    "none" "10"
+check "30-workspace-edge-14pct.jsonl"  "Workspace 14% — below threshold (15%)"    "none" "11"
+check "31-task-drift-edge.jsonl"       "Same dirs post-compaction + 9 reads — no drift" "none" "12"
+
+echo ""
+echo "=== Pattern 13: Unbounded walk ==="
+echo ""
+
+check "32-unbounded-walk.jsonl"          "Unbounded walk — unscoped recursive cmds"    "13"   ""
+check "33-unbounded-walk-negative.jsonl" "Scoped recursive cmds — no unbounded walk"   "none" "13"
+check "34-unbounded-walk-edge.jsonl"     "Only 2 unscoped finds — below threshold (3)" "none" "13"
+
+echo ""
+echo "=== Pattern 14: Tool misuse ==="
+echo ""
+
+check "35-tool-misuse.jsonl"          "Redundant reads — same file 5x without edit"  "14"   ""
+check "36-tool-misuse-negative.jsonl" "Read-edit-read cycle — no misuse"             "none" "14"
+check "37-tool-misuse-edge.jsonl"     "Same file read 2x — below threshold (3)"      "none" "14"
+
+echo ""
+echo "=== Compaction threshold edge case ==="
+echo ""
+
+check "38-compaction-edge-35pct.jsonl" "35% token drop — below compaction threshold (40%)" "none" "10"
 
 echo ""
 echo "=== Edge case tests ==="

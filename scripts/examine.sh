@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="0.9.0"
+VERSION="0.11.1"
 
 # examine.sh <path-to-jsonl>
 # Reads one JSONL session file, outputs a JSON summary to stdout.

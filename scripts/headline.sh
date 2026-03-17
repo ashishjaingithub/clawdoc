@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="0.9.0"
+VERSION="0.11.1"
 
 # headline.sh [--brief] <sessions-directory>
 # Scans all recent sessions (last 7 days), runs diagnose on each,
@@ -123,7 +123,7 @@ if [ "$BRIEF" -eq 1 ]; then
   if [ "$TOTAL_FINDINGS" -eq 0 ]; then
     printf "%s: %d sessions, \$%.2f, all clear\n" "$YESTERDAY" "$TOTAL_SESSIONS" "$TOTAL_COST"
   elif [ -n "$TOP_PATTERN" ]; then
-    printf "%s: %d sessions, \$%.2f, %d warning(s) (%s)\n" \
+    printf "%s: %d sessions, \$%.2f, %d alert(s) (%s)\n" \
       "$YESTERDAY" "$TOTAL_SESSIONS" "$TOTAL_COST" "$WARN_COUNT" "$TOP_PATTERN"
   else
     printf "%s: %d sessions, \$%.2f, %d finding(s)\n" \
@@ -151,7 +151,7 @@ echo "$COMBINED" | jq -r '
     -(.cost_impact // 0)
   ) | .[:5][] |
   (if .severity == "critical" then "🔴"
-   elif .severity == "high" then "🔴"
+   elif .severity == "high" then "🟠"
    elif .severity == "medium" then "🟡"
    else "🟢" end) + " " + (.evidence | gsub("/[Uu]sers/[^/]+/"; "~/") | gsub("/home/[^/]+/"; "~/") | gsub("/private/tmp/[^/]+/"; "/tmp/"))
 ' 2>/dev/null || true
