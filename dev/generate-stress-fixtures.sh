@@ -9,6 +9,16 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUT_DIR="$SCRIPT_DIR/../tests/fixtures/stress"
 
+if [ -d "$OUT_DIR" ] && [ "$(ls -A "$OUT_DIR" 2>/dev/null)" ]; then
+  echo "Output directory '$OUT_DIR' exists and is not empty."
+  printf "Remove it and regenerate? [y/N] "
+  read -r CONFIRM
+  if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ]; then
+    echo "Aborted." >&2
+    exit 1
+  fi
+fi
+
 rm -rf "$OUT_DIR"
 mkdir -p "$OUT_DIR"
 

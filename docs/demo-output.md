@@ -1,6 +1,6 @@
 # clawdoc demo — v0.11.1
 
-Run the interactive demo: `bash docs/demo.sh`
+Run the interactive demo: `bash dev/demo.sh`
 
 ---
 

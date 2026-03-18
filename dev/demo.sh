@@ -4,8 +4,8 @@
 # ═══════════════════════════════════════════════════════════════
 #
 # Usage:
-#   bash docs/demo.sh           # full interactive demo
-#   bash docs/demo.sh --fast    # skip pauses
+#   bash dev/demo.sh           # full interactive demo
+#   bash dev/demo.sh --fast    # skip pauses
 #
 # No dependencies beyond clawdoc's own requirements (bash + jq).
 
@@ -57,7 +57,7 @@ narrate() {
 run_cmd() {
   echo -e "  ${GREEN}\$${RESET} $1"
   echo ""
-  eval "$1" 2>/dev/null | sed 's/^/  /'
+  bash -c "$1" 2>/dev/null | sed 's/^/  /'
 }
 
 # ═══════════════════════════════════════════════════════════════

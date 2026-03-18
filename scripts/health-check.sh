@@ -23,9 +23,9 @@ echo ""
 echo "🛡️  clawdoc — Health Check"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-run_check "Detection tests (57)"  bash -c "make test"
-run_check "Shellcheck lint"       bash -c "make lint"
-run_check "Dependencies"          bash -c "make check-deps"
+run_check "Detection tests (57)"  make test
+run_check "Shellcheck lint"       make lint
+run_check "Dependencies"          make check-deps
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

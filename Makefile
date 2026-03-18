@@ -15,7 +15,7 @@ help:
 	@echo "  make help         Show this help"
 
 demo:
-	@bash scripts/generate-demo.sh
+	@bash dev/generate-demo.sh
 
 test:
 	@bash tests/test-detection.sh
@@ -35,7 +35,7 @@ lint:
 	@shellcheck -x scripts/health-check.sh
 	@shellcheck -x scripts/check-deps.sh
 	@shellcheck -x scripts/check-counts.sh
-	@shellcheck -x scripts/generate-demo.sh
+	@shellcheck -x dev/generate-demo.sh
 	@shellcheck -x tests/test-detection.sh
 	@echo "All scripts passed shellcheck."
 

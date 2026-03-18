@@ -7,9 +7,32 @@ set -uo pipefail
 #
 # Usage: convert-claude-sessions.sh <input-dir> <output-dir> [max-files]
 
-INPUT_DIR="${1:-$HOME/.claude/projects}"
+if [ -z "${1:-}" ]; then
+  echo "Usage: convert-claude-sessions.sh <input-dir> [output-dir] [max-files]" >&2
+  echo "  input-dir   Directory containing Claude Code session JSONL files (required)" >&2
+  echo "  output-dir  Where to write converted files (default: tests/fixtures/real)" >&2
+  echo "  max-files   Maximum files to convert (default: 100)" >&2
+  exit 1
+fi
+
+INPUT_DIR="$1"
 OUTPUT_DIR="${2:-$(dirname "$0")/../tests/fixtures/real}"
 MAX_FILES="${3:-100}"
+
+if [ ! -d "$INPUT_DIR" ]; then
+  echo "Error: input directory '$INPUT_DIR' does not exist." >&2
+  exit 1
+fi
+
+if [ -d "$OUTPUT_DIR" ] && [ "$(ls -A "$OUTPUT_DIR" 2>/dev/null)" ]; then
+  echo "Output directory '$OUTPUT_DIR' exists and is not empty."
+  printf "Remove it and regenerate? [y/N] "
+  read -r CONFIRM
+  if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ]; then
+    echo "Aborted." >&2
+    exit 1
+  fi
+fi
 
 rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"

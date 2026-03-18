@@ -182,8 +182,8 @@ echo "$INPUT" | jq -r '
   .value.prescription
 '
 
-# Self-improving-agent integration
-if [ -d ".learnings" ]; then
+# Self-improving-agent integration (opt-in: set CLAWDOC_LEARNINGS=1)
+if [ "${CLAWDOC_LEARNINGS:-0}" = "1" ] && [ -d ".learnings" ]; then
   LEARNINGS_FILE=".learnings/LEARNINGS.md"
   echo "" >&2
   echo "[prescribe] .learnings/ directory found — writing to $LEARNINGS_FILE" >&2

@@ -83,7 +83,7 @@ fi
 # --- Version ---
 echo ""
 echo "=== Version consistency ==="
-for script in "$ROOT"/scripts/examine.sh "$ROOT"/scripts/diagnose.sh "$ROOT"/scripts/prescribe.sh "$ROOT"/scripts/cost-waterfall.sh "$ROOT"/scripts/headline.sh "$ROOT"/scripts/history.sh "$ROOT"/scripts/generate-demo.sh; do
+for script in "$ROOT"/scripts/examine.sh "$ROOT"/scripts/diagnose.sh "$ROOT"/scripts/prescribe.sh "$ROOT"/scripts/cost-waterfall.sh "$ROOT"/scripts/headline.sh "$ROOT"/scripts/history.sh "$ROOT"/dev/generate-demo.sh; do
   SCRIPT_VER=$(bash "$script" --version 2>/dev/null | head -1)
   BASENAME=$(basename "$script")
   check "$BASENAME --version" "$ACTUAL_VERSION" "$SCRIPT_VER" "$BASENAME"

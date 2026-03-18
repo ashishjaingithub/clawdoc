@@ -7,8 +7,8 @@ set -euo pipefail
 # then runs diagnose → prescribe so you can see clawdoc in action immediately.
 #
 # Usage:
-#   bash scripts/generate-demo.sh              # generate + diagnose + prescribe
-#   bash scripts/generate-demo.sh --json-only  # just output the JSONL to stdout
+#   bash dev/generate-demo.sh              # generate + diagnose + prescribe
+#   bash dev/generate-demo.sh --json-only  # just output the JSONL to stdout
 #
 # No real agent sessions required. No data leaves your machine.
 
@@ -38,8 +38,8 @@ Patterns embedded:
   P14 Tool misuse             (same file read 4 times without edit)
 
 Example:
-  bash scripts/generate-demo.sh
-  bash scripts/generate-demo.sh --json-only > my-demo.jsonl
+  bash dev/generate-demo.sh
+  bash dev/generate-demo.sh --json-only > my-demo.jsonl
 EOF
 }
 
@@ -50,9 +50,10 @@ JSON_ONLY=0
 if [[ "${1:-}" == "--json-only" ]]; then JSON_ONLY=1; fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DIAGNOSE="$SCRIPT_DIR/diagnose.sh"
-PRESCRIBE="$SCRIPT_DIR/prescribe.sh"
-EXAMINE="$SCRIPT_DIR/examine.sh"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+DIAGNOSE="$ROOT_DIR/scripts/diagnose.sh"
+PRESCRIBE="$ROOT_DIR/scripts/prescribe.sh"
+EXAMINE="$ROOT_DIR/scripts/examine.sh"
 
 # Check dependencies
 if ! command -v jq >/dev/null 2>&1; then
@@ -60,7 +61,8 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 1
 fi
 
-DEMO_FILE="/tmp/clawdoc-demo-session.jsonl"
+DEMO_FILE=$(mktemp /tmp/clawdoc-demo.XXXXXX)
+trap 'rm -f "$DEMO_FILE"' EXIT
 
 # ═══════════════════════════════════════════════════════════════
 # Generate the synthetic session
@@ -171,8 +173,8 @@ echo ""
 bash "$DIAGNOSE" "$DEMO_FILE" 2>/dev/null | bash "$PRESCRIBE" 2>/dev/null | sed 's/^/  /'
 
 echo ""
-echo -e "  ${DIM}Demo session saved to: $DEMO_FILE${RESET}"
 echo -e "  ${DIM}Try it yourself:${RESET}"
-echo -e "  ${GREEN}\$${RESET} bash scripts/diagnose.sh $DEMO_FILE | jq ."
-echo -e "  ${GREEN}\$${RESET} bash scripts/cost-waterfall.sh $DEMO_FILE | jq '.[0:3]'"
+echo -e "  ${GREEN}\$${RESET} bash dev/generate-demo.sh --json-only > /tmp/demo.jsonl"
+echo -e "  ${GREEN}\$${RESET} bash scripts/diagnose.sh /tmp/demo.jsonl | jq ."
+echo -e "  ${GREEN}\$${RESET} bash scripts/cost-waterfall.sh /tmp/demo.jsonl | jq '.[0:3]'"
 echo ""
