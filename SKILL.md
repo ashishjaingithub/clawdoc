@@ -45,111 +45,43 @@ Also activates when user says: "what went wrong", "why did that fail", "debug", 
 
 ## Quick examination — most recent session
 
-```bash
-AGENT_DIR=$(ls -dt ~/.openclaw/agents/*/sessions 2>/dev/null | head -1)
-AGENT_ID=$(echo "$AGENT_DIR" | rev | cut -d/ -f2 | rev)
-LATEST=$(ls -t "$AGENT_DIR"/*.jsonl 2>/dev/null | head -1)
+Find the most recent session file and run:
+```
+bash {baseDir}/scripts/examine.sh <session.jsonl>
+```
+This outputs a JSON summary with turns, cost, token counts, tool call frequency, and error count.
 
-if [ -z "$LATEST" ]; then
-  echo "No sessions found."
-  exit 0
-fi
+## Single-session diagnosis
 
-echo "=== Patient: $(basename "$LATEST" .jsonl) ==="
-echo "Model: $(head -1 "$LATEST" | jq -r '.model // "unknown"')"
-echo "Turns: $(wc -l < "$LATEST")"
-echo "Duration: $(head -1 "$LATEST" | jq -r '.timestamp') → $(tail -1 "$LATEST" | jq -r '.timestamp')"
-echo ""
-
-# Vitals
-TOTAL_COST=$(jq -s '[.[] | .message.usage.cost.total // 0] | add' "$LATEST")
-TOTAL_IN=$(jq -s '[.[] | .message.usage.inputTokens // 0] | add' "$LATEST")
-TOTAL_OUT=$(jq -s '[.[] | .message.usage.outputTokens // 0] | add' "$LATEST")
-MAX_IN=$(jq -s '[.[] | .message.usage.inputTokens // 0] | max' "$LATEST")
-echo "Cost: \$$TOTAL_COST"
-echo "Tokens: ${TOTAL_IN} input / ${TOTAL_OUT} output"
-echo "Peak context: ${MAX_IN} tokens"
-echo ""
-
-# Tool call frequency
-echo "Tool calls:"
-jq -r '.message.content[]? | select(.type == "toolCall") | .name' "$LATEST" 2>/dev/null | sort | uniq -c | sort -rn | head -10
-echo ""
-
-# Error count
-ERR_COUNT=$(jq -r 'select(.message.role == "toolResult") | .message.content[]? | select(.type == "text") | .text' "$LATEST" 2>/dev/null | grep -ciE "(error|fail|denied|timeout|not found|missing)" || echo 0)
-echo "Errors detected: $ERR_COUNT"
-echo ""
-
-# Cost waterfall — top 5 most expensive turns
-echo "Most expensive turns:"
-jq -r 'select(.message.usage.cost.total > 0) | [.timestamp, .message.role, (.message.usage.cost.total | tostring), (.message.usage.inputTokens | tostring)] | @tsv' "$LATEST" 2>/dev/null | sort -t$'\t' -k3 -rn | head -5 | awk -F'\t' '{printf "  %s | %s | $%s | %s input tokens\n", $1, $2, $3, $4}'
+Run all 14 pattern detectors against a specific session file:
+```
+bash {baseDir}/scripts/diagnose.sh <session.jsonl> | jq .
 ```
 
-## Detect infinite retry loops
+## Diagnosis with prescriptions
 
-```bash
-jq -r '.message.content[]? | select(.type == "toolCall") | .name' "$LATEST" 2>/dev/null | \
-  awk '{if($0==prev){count++}else{if(count>=4)print (count+1)"x " prev " (RETRY LOOP DETECTED)";count=0};prev=$0} END{if(count>=4)print (count+1)"x " prev " (RETRY LOOP DETECTED)"}'
+Pipe diagnose output into prescribe for a formatted report with fix recommendations:
+```
+bash {baseDir}/scripts/diagnose.sh <session.jsonl> | bash {baseDir}/scripts/prescribe.sh
 ```
 
-## Detect tool-as-text (broken tool calls)
+## Cost breakdown
 
-```bash
-jq -r 'select(.message.role == "assistant") | .message.content[]? | select(.type == "text") | .text' "$LATEST" 2>/dev/null | \
-  grep -cE "^(read |exec |write |search_web |browser_navigate )" && \
-  echo "⚠️  Tool commands appearing as plain text — likely model/provider compatibility issue"
+Show per-turn cost waterfall for a session:
+```
+bash {baseDir}/scripts/cost-waterfall.sh <session.jsonl> | jq '.[0:5]'
 ```
 
-## Detect context bloat
+## Cross-session pattern recurrence
 
-```bash
-echo "Context growth per turn:"
-jq -r 'select(.message.usage.inputTokens > 0) | [(.message.usage.inputTokens | tostring)] | @tsv' "$LATEST" 2>/dev/null | \
-  awk 'BEGIN{prev=0}{delta=$1-prev; if(prev>0) printf "  %d tokens (+%d, %+.1f%%)\n", $1, delta, (prev>0?delta/prev*100:0); prev=$1}'
+Analyze pattern recurrence across multiple sessions in a directory:
 ```
-
-## Detect model routing waste
-
-```bash
-echo "Model usage across recent sessions:"
-SESSIONS_JSON=$(dirname "$LATEST")/sessions.json
-if [ -f "$SESSIONS_JSON" ]; then
-  jq -r 'to_entries[] | select(.key | test("cron:|heartbeat")) | [.key, .value.model // "unknown", (.value.totalTokens // 0 | tostring)] | @tsv' "$SESSIONS_JSON" 2>/dev/null | \
-    awk -F'\t' '{printf "  %s → %s (%s tokens)\n", $1, $2, $3}'
-fi
-```
-
-## Detect cron context accumulation
-
-```bash
-echo "Cron session growth:"
-for f in $(ls -t "$AGENT_DIR"/*.jsonl 2>/dev/null | head -20); do
-  KEY=$(head -1 "$f" | jq -r '.sessionKey // empty')
-  if echo "$KEY" | grep -q "cron:"; then
-    FIRST_IN=$(jq -r 'select(.message.usage.inputTokens > 0) | .message.usage.inputTokens' "$f" 2>/dev/null | head -1)
-    [ -n "$FIRST_IN" ] && echo "  $KEY: starts at $FIRST_IN input tokens ($(basename $f))"
-  fi
-done
-```
-
-## Check workspace overhead
-
-```bash
-echo "Workspace file sizes (estimated token cost):"
-WORKSPACE=$(dirname "$(dirname "$AGENT_DIR")")
-for f in "$WORKSPACE"/{AGENTS,SOUL,TOOLS,MEMORY,IDENTITY,USER,HEARTBEAT,BOOTSTRAP}.md; do
-  if [ -f "$f" ]; then
-    CHARS=$(wc -c < "$f")
-    TOKENS=$((CHARS / 4))
-    echo "  $(basename $f): ~${TOKENS} tokens (${CHARS} chars)"
-  fi
-done
+bash {baseDir}/scripts/history.sh <sessions-dir> | jq .
 ```
 
 ## Full diagnosis
 
-When the user wants a comprehensive diagnosis, run ALL checks above, then synthesize findings into this report format:
+When the user wants a comprehensive diagnosis, run the scripts above and synthesize findings into this report format:
 
 ### Diagnosis report format
 
@@ -205,13 +137,14 @@ Each finding includes: what happened, evidence, estimated cost impact, and speci
 
 ## Self-improving-agent integration
 
-If `.learnings/` directory exists, write findings to `.learnings/LEARNINGS.md` using DR-NNN IDs, Pattern-Key format, and Recurrence-Count tracking. When recurrence hits 3+ across 2+ sessions in 30 days, suggest promotion to AGENTS.md or TOOLS.md.
+To enable writing findings to `.learnings/LEARNINGS.md`, set `CLAWDOC_LEARNINGS=1` before running prescribe:
+```
+CLAWDOC_LEARNINGS=1 bash {baseDir}/scripts/diagnose.sh <session.jsonl> | bash {baseDir}/scripts/prescribe.sh
+```
 
 ## Tips
 
-- Session JSONL at `~/.openclaw/agents/<agentId>/sessions/` is the ground truth
-- Use `jq -s` (slurp) for aggregations across all lines
+- Session JSONL files are the ground truth for all diagnostics
+- Use `jq -s` (slurp) for aggregations across all lines in a session file
 - Filter `message.content[]` by `type=="text"` for readable content, `type=="toolCall"` for tool invocations
-- `sessions.json` has cumulative token counts — good for quick overviews
-- Gateway logs at `/tmp/openclaw/openclaw-YYYY-MM-DD.log` capture provider-level errors the session JSONL may not
 - When prescribing config changes, always show the exact JSON path and value
