@@ -226,88 +226,34 @@ echo $TOOL_CALLS | wc -l
 
 ---
 
-## 🛡️ Self-Evaluating Guardian Protocol
+## 🛡️ Guardian Protocol
 
-This section tells Claude how to act as its own quality guardian — continuously
-evaluating the codebase, identifying drift from standards, and self-healing before
-any bug reaches a commit.
+See `agentic-standards/rules/common/guardian-protocol.md` for the full session start/end ritual, self-healing steps, and guardian mindset.
 
-### SESSION START PROTOCOL — Run This Every Time, Before Touching Any Code
+### SESSION START — clawdoc-specific
+1. `make test` — confirm the baseline is green
+2. `make check-counts` — verify detector/test/fixture/version counts match docs
+3. `make lint` — confirm no pre-existing shellcheck violations
+4. Review `CHANGELOG.md` to understand recent changes
 
-At the beginning of every coding session, run the full health check:
+### SESSION END — clawdoc-specific
+1. `make test` — all 57+ tests pass ✅
+2. `make check-counts` — all counts in sync ✅
+3. `make lint` — shellcheck passes ✅
+4. `CHANGELOG.md` updated ✅
 
-```bash
-bash scripts/health-check.sh
-```
-
-If `health-check.sh` does not exist, run these manually:
-1. `make test` — confirm the baseline is green before you change anything
-2. `make test` — note current coverage; your changes must not lower it
-3. `make lint` — confirm no pre-existing type errors
-4. `make lint` — confirm no pre-existing lint violations
-
-**If the baseline is already broken: fix it first. Do not layer new changes on top of a broken baseline.**
-
-### CONTINUOUS EVALUATION — After Every File Edit
-
-After every file you write or modify:
-1. The PostToolUse hook in `.claude/settings.json` runs the test suite automatically
-2. Read the output carefully — do not ignore failures, warnings, or coverage drops
-3. If a test fails because of your change: **stop, fix it before the next edit**
-4. If coverage drops below threshold: write the missing tests before moving on
-
-This is the feedback loop. Use it.
-
-### SESSION END PROTOCOL — Before Stopping Work
-
-Before ending any session or declaring a task complete:
-1. Run `bash scripts/health-check.sh` (full suite)
-2. Confirm: all tests green ✅
-3. Confirm: coverage at or above thresholds ✅
-4. Confirm: no TypeScript/lint errors ✅
-5. Confirm: pre-commit hook would not block ✅
-
-If any item is red: fix it now. Do not leave a broken baseline for the next session.
-
-### DRIFT DETECTION — Evaluating Code Against Standards
+### DRIFT DETECTION — clawdoc-specific
 
 During any session, if you notice the codebase deviating from these standards, **fix
 the drift proactively** — even if you were not asked to:
 
 | Drift Pattern | Action to Take |
 |---|---|
-| File in `src/lib/` with no corresponding test | Create the test file |
-| Function with no error handling | Add try/catch or explicit error return |
-| API route with no input validation | Add Zod schema validation |
-| External API call not mocked in existing test | Fix the test |
-| `any` type in TypeScript | Replace with proper type |
-| Silent catch block (`catch {}` or `catch (e) {}`) | Add logging and re-throw or return error |
-| TODO/FIXME comment older than current sprint | Implement or remove it |
-| Test that only asserts `toHaveBeenCalled()` without checking return value | Fix the assertion |
-
-### SELF-HEALING PROTOCOL — When Tests Fail After Your Change
-
-If your change broke a test, take these steps in order:
-1. **Read the failure message completely** — do not skim
-2. **Identify whether the test is right or your code is right**
-   - If the test asserts the correct expected behavior: fix your code
-   - If the test was testing implementation details (not behavior): fix the test
-3. **Fix the root cause, not the symptom** — do not delete a failing test or change assertions to make a test pass without understanding why
-4. **Re-run the test in isolation** to confirm the fix works
-5. **Re-run the full suite** to confirm nothing else broke
-
-### GUARDIAN MINDSET — How to Think in Every Session
-
-You are simultaneously:
-- The **developer** writing the feature (get it working)
-- The **reviewer** checking your own work (find what could go wrong)
-- The **QA engineer** trying to break it (find the edge cases)
-- The **guardian** ensuring standards are maintained (check for drift)
-
-These four perspectives are not sequential — run them in parallel throughout the session.
-When you write a function, immediately ask: "how would a QA engineer break this?"
-When you write a test, immediately ask: "is this testing behavior or implementation?"
-When you finish a task, immediately ask: "have I lowered the quality bar anywhere?"
-
-The answer to all three questions must be satisfactory before the task is marked done.
+| New detection pattern without corresponding test fixtures | Create true positive + true negative + edge case fixture |
+| `jq` call without `2>/dev/null` | Add error suppression — missing fields are expected |
+| Unquoted `$VARIABLE` in any shell script | Quote all variable references |
+| Pattern threshold changed but table in CLAUDE.md not updated | Update table AND run `make check-counts` |
+| New detection script not passing `shellcheck -x` | Fix all shellcheck warnings before committing |
+| Detection added to `diagnose.sh` but not to `SKILL.md` or `README.md` pattern table | Update both docs |
+| TODO/FIXME in script comments older than current sprint | Implement or remove it |
 
