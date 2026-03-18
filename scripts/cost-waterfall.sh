@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="0.11.1"
+VERSION="0.12.0"
 
 # cost-waterfall.sh <path-to-jsonl>
 # Outputs per-turn cost breakdown sorted by cost descending.

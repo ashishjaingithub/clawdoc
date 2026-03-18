@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="0.11.1"
+VERSION="0.12.0"
 
 # headline.sh [--brief] <sessions-directory>
 # Scans all recent sessions (last 7 days), runs diagnose on each,

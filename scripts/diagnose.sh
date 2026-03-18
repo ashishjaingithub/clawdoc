@@ -4,7 +4,7 @@ set -euo pipefail
 # and the reader closes before jq finishes writing. Harmless in diagnostic context.
 trap '' PIPE
 
-VERSION="0.11.1"
+VERSION="0.12.0"
 
 # diagnose.sh — Detects 14 anti-patterns in an OpenClaw JSONL session file
 # Usage: diagnose.sh <path-to-session.jsonl>

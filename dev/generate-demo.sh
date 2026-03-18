@@ -12,7 +12,7 @@ set -euo pipefail
 #
 # No real agent sessions required. No data leaves your machine.
 
-VERSION="0.11.1"
+VERSION="0.12.0"
 
 usage() {
   cat <<EOF

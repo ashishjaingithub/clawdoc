@@ -24,7 +24,7 @@ bash install.sh
 You should see:
 ```
 🩻 clawdoc installer
-✓ Installed clawdoc 0.11.1 to ~/.openclaw/skills/clawdoc
+✓ Installed clawdoc 0.12.0 to ~/.openclaw/skills/clawdoc
 ```
 
 Verify it works:
@@ -32,7 +32,7 @@ Verify it works:
 bash ~/.openclaw/skills/clawdoc/scripts/diagnose.sh --version
 ```
 
-Should print: `0.11.1`
+Should print: `0.12.0`
 
 **If `jq` is missing**, install it first:
 ```bash

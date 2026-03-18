@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="0.11.1"
+VERSION="0.12.0"
 
 # history.sh <sessions-directory>
 # Cross-session recurrence tracker. Runs diagnose on all sessions,

@@ -4,6 +4,20 @@ All notable changes to clawdoc are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] — 2026-03-18
+
+### Changed
+- **SKILL.md rewritten** — removed all inline bash code blocks; all diagnostics now route through hardened scripts that require explicit user-provided paths. No more auto-discovery of session directories or workspace config files.
+- **Demo scripts moved to `dev/`** — `generate-demo.sh` and `demo.sh` are no longer in shipped `scripts/` or `docs/` directories. Not included in `install.sh` output.
+- **`.learnings/` writes are now opt-in** — `prescribe.sh` only writes to `.learnings/LEARNINGS.md` when `CLAWDOC_LEARNINGS=1` is set.
+
+### Security
+- **Removed all `eval` usage** — replaced with safe alternatives or eliminated entirely.
+- **Removed all `bash -c` from shipped scripts** — `health-check.sh` now calls make targets directly.
+- **Added confirmation prompts** before `rm -rf` in dev scripts (`convert-claude-sessions.sh`, `generate-stress-fixtures.sh`).
+- **`convert-claude-sessions.sh` requires explicit input directory** — no longer defaults to `$HOME/.claude/projects`.
+- **Temp files use `mktemp` + `trap` cleanup** — no more hardcoded `/tmp` paths without cleanup.
+
 ## [0.11.2] — 2026-03-17
 
 ### Fixed

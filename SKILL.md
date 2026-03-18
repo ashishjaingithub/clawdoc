@@ -1,6 +1,6 @@
 ---
 name: clawdoc
-version: 0.11.1
+version: 0.12.0
 description: "Diagnose OpenClaw agent failures, cost spikes, and performance issues with 14 pattern detectors. Use when: task failed unexpectedly, costs seem high, agent burned tokens, debugging session problems, want a health check, reviewing agent performance, agent forgot context, agent kept retrying, agent said commands but didn't execute them, cron jobs getting expensive, heartbeat costs too high, agent drifted off task after compaction, agent stuck reading without editing, agent running find/grep on entire filesystem, agent re-reading same file repeatedly."
 user-invocable: true
 metadata:
