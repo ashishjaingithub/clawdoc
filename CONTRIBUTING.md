@@ -7,7 +7,7 @@
 2. **Add the detector function** in `scripts/diagnose.sh`:
    ```bash
    detect_my_pattern() {
-     # Extract signals with jq
+     # Live signals with jq
      local signal
      signal=$(jq -s '...' "$JSONL")
 
@@ -73,7 +73,7 @@ Current thresholds and their rationale (change only with evidence):
 ## Running tests
 
 ```bash
-make test          # all 57 tests
+make test          # all 66 tests
 make lint          # shellcheck (requires: brew install shellcheck)
 make check-deps    # verify jq, awk, bash versions
 ```

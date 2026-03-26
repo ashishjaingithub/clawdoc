@@ -1,0 +1,9 @@
+{"type":"session","timestamp":"2026-03-13T10:00:00.000Z","sessionId":"test-cron-non-monotonic","agentId":"main","model":"anthropic/claude-haiku-4-5","sessionKey":"cron:daily-check"}
+{"type":"message","timestamp":"2026-03-13T10:00:05.000Z","message":{"role":"user","content":[{"type":"text","text":"Run daily check."}]}}
+{"type":"message","timestamp":"2026-03-13T10:00:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"Running check 1."},{"type":"toolCall","id":"tc_001","name":"exec","input":{"command":"check.sh"}}],"usage":{"inputTokens":5000,"outputTokens":20,"cost":{"total":0.01560}}}}
+{"type":"message","timestamp":"2026-03-13T10:01:05.000Z","message":{"role":"toolResult","content":[{"type":"text","text":"OK"}]}}
+{"type":"message","timestamp":"2026-03-13T10:01:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"Running check 2."},{"type":"toolCall","id":"tc_002","name":"exec","input":{"command":"check2.sh"}}],"usage":{"inputTokens":8000,"outputTokens":20,"cost":{"total":0.02460}}}}
+{"type":"message","timestamp":"2026-03-13T10:02:05.000Z","message":{"role":"toolResult","content":[{"type":"text","text":"OK"}]}}
+{"type":"message","timestamp":"2026-03-13T10:02:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"Running check 3."},{"type":"toolCall","id":"tc_003","name":"exec","input":{"command":"check3.sh"}}],"usage":{"inputTokens":6000,"outputTokens":20,"cost":{"total":0.01860}}}}
+{"type":"message","timestamp":"2026-03-13T10:03:05.000Z","message":{"role":"toolResult","content":[{"type":"text","text":"OK"}]}}
+{"type":"message","timestamp":"2026-03-13T10:03:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"All checks passed."}],"usage":{"inputTokens":7000,"outputTokens":15,"cost":{"total":0.02145}}}}

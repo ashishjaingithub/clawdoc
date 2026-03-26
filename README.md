@@ -176,7 +176,7 @@ When installed as an OpenClaw skill, your agent reads SKILL.md and can invoke cl
 
 ```bash
 make demo       # generate a broken session and diagnose it — try clawdoc instantly
-make test       # runs 57 tests: detection, edge cases, unit, integration
+make test       # runs 66 tests: detection, edge cases, unit, integration
 make lint       # shellcheck all scripts (requires: brew install shellcheck)
 make check-deps # verify jq, bash, awk are present
 ```

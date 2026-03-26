@@ -6,7 +6,7 @@ help:
 	@echo ""
 	@echo "Targets:"
 	@echo "  make demo         Generate a broken session and diagnose it"
-	@echo "  make test         Run the full test suite (57 tests)"
+	@echo "  make test         Run the full test suite (66 tests)"
 	@echo "  make lint         Run shellcheck on all scripts"
 	@echo "  make check-counts Verify hardcoded counts in docs match reality"
 	@echo "  make check-deps   Verify required tools are installed"

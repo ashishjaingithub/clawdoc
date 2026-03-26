@@ -324,6 +324,29 @@ echo ""
 check "38-compaction-edge-35pct.jsonl" "35% token drop — below compaction threshold (40%)" "none" "10"
 
 echo ""
+echo "=== Additional edge cases: severity, boundary, robustness ==="
+echo ""
+
+# Context exhaustion at 90%+ should trigger with high severity
+check "39-context-exhaustion-90pct.jsonl"  "Context exhaustion at 93% — high severity"     "4"    ""
+# Context exhaustion at exactly 70% should trigger (boundary: >= 70%)
+check "40-context-exactly-70pct.jsonl"     "Context exactly 70% — at threshold, triggers"   "4"    ""
+# Cost spike: turn at exactly 0.50 — should NOT trigger (threshold is >0.50, not >=0.50)
+check "41-cost-spike-exactly-050.jsonl"    "Cost turn at 0.50 — at threshold boundary"      "none" "6"
+# Cost spike: session total > 1.00 but no single turn > 0.50 — should trigger
+check "42-cost-spike-session-total.jsonl"  "Cost session total 1.15 — triggers medium"      "6"    ""
+# Tool misuse: repeated identical Grep searches (sub-detector B)
+check "43-tool-misuse-search.jsonl"        "Repeated Grep search 3x — triggers misuse"      "14"   ""
+# Missing cost fields (null) — should not crash any detector
+check_no_crash "44-all-null-costs.jsonl"   "Session with null cost fields does not crash"
+# Missing usage fields entirely — should not crash any detector
+check_no_crash "45-missing-usage-fields.jsonl" "Session with missing usage fields does not crash"
+# Cron with non-monotonic token growth — should NOT trigger cron accumulation (may trigger pattern 8)
+check "46-cron-non-monotonic.jsonl"        "Cron non-monotonic tokens — no accumulation"    "none" "9"
+# Unbounded walk: output doubling sub-detector (3 consecutive doublings)
+check "47-unbounded-walk-output-doubling.jsonl" "Output doubling 3x — triggers unbounded walk" "13" ""
+
+echo ""
 echo "=== Edge case tests ==="
 echo ""
 

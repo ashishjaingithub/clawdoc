@@ -1,4 +1,23 @@
 # clawdoc — Agent Session Diagnostics
+
+**Phase:** Control
+
+## Getting Started
+
+```bash
+# 1. Clone or navigate to the clawdoc directory
+cd clawdoc
+
+# 2. Make scripts executable
+chmod +x scripts/*.sh
+
+# 3. Run tests to verify setup
+bash tests/run-tests.sh
+
+# 4. Run a diagnostic on a session file
+bash scripts/diagnose.sh <session-file>
+```
+
 ## Engineering Standards for Claude Code Sessions
 
 ---
@@ -223,6 +242,28 @@ echo $TOOL_CALLS | wc -l
 ---
 
 *Constitution alignment: Principles II (TDD), IV (Continuous Quality) — clawdoc/CLAUDE.md v1.0 — 2026-03-13*
+
+---
+
+## Metrics Integration
+
+clawdoc can query agenticLearning's hook metrics telemetry:
+
+```bash
+# View hook execution summary
+.claude/metrics-report.sh
+
+# View last 50 events
+.claude/metrics-report.sh 50
+
+# Raw JSONL for custom analysis
+cat .claude/metrics.jsonl | python3 -c "
+import sys, json
+from collections import Counter
+data = [json.loads(l) for l in sys.stdin if l.strip()]
+print(Counter(d['tool'] for d in data).most_common(10))
+"
+```
 
 ---
 

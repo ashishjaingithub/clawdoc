@@ -1,0 +1,11 @@
+{"type":"session","timestamp":"2026-03-13T10:00:00.000Z","sessionId":"test-unbounded-output-doubling","agentId":"main","model":"anthropic/claude-sonnet-4-6","sessionKey":"agent:main:main"}
+{"type":"message","timestamp":"2026-03-13T10:00:05.000Z","message":{"role":"user","content":[{"type":"text","text":"List all files."}]}}
+{"type":"message","timestamp":"2026-03-13T10:00:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"Listing."},{"type":"toolCall","id":"tc_001","name":"exec","input":{"command":"ls src/"}}],"usage":{"inputTokens":2000,"outputTokens":20,"cost":{"total":0.00620}}}}
+{"type":"message","timestamp":"2026-03-13T10:01:05.000Z","message":{"role":"toolResult","content":[{"type":"text","text":"ab"}]}}
+{"type":"message","timestamp":"2026-03-13T10:01:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"More."},{"type":"toolCall","id":"tc_002","name":"exec","input":{"command":"cat src/*.ts"}}],"usage":{"inputTokens":3000,"outputTokens":25,"cost":{"total":0.00925}}}}
+{"type":"message","timestamp":"2026-03-13T10:02:05.000Z","message":{"role":"toolResult","content":[{"type":"text","text":"abcde"}]}}
+{"type":"message","timestamp":"2026-03-13T10:02:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"More detail."},{"type":"toolCall","id":"tc_003","name":"exec","input":{"command":"cat src/**/*.ts"}}],"usage":{"inputTokens":6000,"outputTokens":25,"cost":{"total":0.01825}}}}
+{"type":"message","timestamp":"2026-03-13T10:03:05.000Z","message":{"role":"toolResult","content":[{"type":"text","text":"abcdefghijklmnopqrst"}]}}
+{"type":"message","timestamp":"2026-03-13T10:03:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"Everything."},{"type":"toolCall","id":"tc_004","name":"exec","input":{"command":"cat src/**/*.ts lib/**/*.ts"}}],"usage":{"inputTokens":12000,"outputTokens":25,"cost":{"total":0.03625}}}}
+{"type":"message","timestamp":"2026-03-13T10:04:05.000Z","message":{"role":"toolResult","content":[{"type":"text","text":"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnop"}]}}
+{"type":"message","timestamp":"2026-03-13T10:04:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"Done."}],"usage":{"inputTokens":24000,"outputTokens":15,"cost":{"total":0.07215}}}}

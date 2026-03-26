@@ -1,0 +1,7 @@
+{"type":"session","timestamp":"2026-03-13T10:00:00.000Z","sessionId":"test-context-exactly-70pct","agentId":"main","model":"anthropic/claude-sonnet-4-6","sessionKey":"agent:main:main"}
+{"type":"message","timestamp":"2026-03-13T10:00:05.000Z","message":{"role":"user","content":[{"type":"text","text":"Read some files."}]}}
+{"type":"message","timestamp":"2026-03-13T10:00:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"Reading files."},{"type":"toolCall","id":"tc_001","name":"read","input":{"path":"src/main.ts"}}],"usage":{"inputTokens":5000,"outputTokens":30,"contextTokens":128000,"cost":{"total":0.01590}}}}
+{"type":"message","timestamp":"2026-03-13T10:01:05.000Z","message":{"role":"toolResult","content":[{"type":"text","text":"file content here"}]}}
+{"type":"message","timestamp":"2026-03-13T10:01:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"Got it. Continuing."},{"type":"toolCall","id":"tc_002","name":"read","input":{"path":"src/utils.ts"}}],"usage":{"inputTokens":89600,"outputTokens":25,"contextTokens":128000,"cost":{"total":0.26905}}}}
+{"type":"message","timestamp":"2026-03-13T10:02:05.000Z","message":{"role":"toolResult","content":[{"type":"text","text":"more file content"}]}}
+{"type":"message","timestamp":"2026-03-13T10:02:35.000Z","message":{"role":"assistant","content":[{"type":"text","text":"Done reading."}],"usage":{"inputTokens":90000,"outputTokens":15,"contextTokens":128000,"cost":{"total":0.27045}}}}
