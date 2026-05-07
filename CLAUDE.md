@@ -158,32 +158,6 @@ assert_not_contains "$result" "RETRY LOOP DETECTED" "retry loop 4x should not tr
 
 ---
 
-## Three-Role Protocol for Significant Changes
-
-### Role 1 — Developer
-1. Before touching any script, read `tests/test-detection.sh` to understand what the tests assert
-2. Write the new test(s) in `test-detection.sh` and create the fixture JSONL(s) first
-3. Implement the detection or change in the script
-4. `make test` — all tests pass
-
-### Role 2 — Reviewer (re-read your work as a skeptic)
-- Does the detection script handle empty JSONL files without crashing?
-- Does it handle JSONL files with only 1 line?
-- Does it handle sessions where `model` field is missing?
-- Does the regex handle edge cases (Unicode in tool names, escaped quotes in text)?
-- Is the threshold hardcoded or configurable? Should it be?
-- Does `jq` fail gracefully when a field is absent vs. null vs. empty string?
-
-### Role 3 — QA (your job is to break it)
-- Run `diagnose.sh` against an empty file: `touch /tmp/empty.jsonl && bash scripts/diagnose.sh /tmp/empty.jsonl`
-- Run against a file with only one line
-- Run against a file with malformed JSON on one line
-- Run `headline.sh` with a directory containing 0 session files
-- Run `headline.sh` with a directory containing 100 session files (performance test)
-- Run `cost-waterfall.sh` against a session where all cost fields are null
-
----
-
 ## Shell Scripting Standards
 
 ```bash
@@ -241,60 +215,5 @@ echo $TOOL_CALLS | wc -l
 
 ---
 
-*Constitution alignment: Principles II (TDD), IV (Continuous Quality) — clawdoc/CLAUDE.md v1.0 — 2026-03-13*
-
----
-
-## Metrics Integration
-
-clawdoc can query agenticLearning's hook metrics telemetry:
-
-```bash
-# View hook execution summary
-.claude/metrics-report.sh
-
-# View last 50 events
-.claude/metrics-report.sh 50
-
-# Raw JSONL for custom analysis
-cat .claude/metrics.jsonl | python3 -c "
-import sys, json
-from collections import Counter
-data = [json.loads(l) for l in sys.stdin if l.strip()]
-print(Counter(d['tool'] for d in data).most_common(10))
-"
-```
-
----
-
-## 🛡️ Guardian Protocol
-
-See `agentic-standards/rules/common/guardian-protocol.md` for the full session start/end ritual, self-healing steps, and guardian mindset.
-
-### SESSION START — clawdoc-specific
-1. `make test` — confirm the baseline is green
-2. `make check-counts` — verify detector/test/fixture/version counts match docs
-3. `make lint` — confirm no pre-existing shellcheck violations
-4. Review `CHANGELOG.md` to understand recent changes
-
-### SESSION END — clawdoc-specific
-1. `make test` — all 57+ tests pass ✅
-2. `make check-counts` — all counts in sync ✅
-3. `make lint` — shellcheck passes ✅
-4. `CHANGELOG.md` updated ✅
-
-### DRIFT DETECTION — clawdoc-specific
-
-During any session, if you notice the codebase deviating from these standards, **fix
-the drift proactively** — even if you were not asked to:
-
-| Drift Pattern | Action to Take |
-|---|---|
-| New detection pattern without corresponding test fixtures | Create true positive + true negative + edge case fixture |
-| `jq` call without `2>/dev/null` | Add error suppression — missing fields are expected |
-| Unquoted `$VARIABLE` in any shell script | Quote all variable references |
-| Pattern threshold changed but table in CLAUDE.md not updated | Update table AND run `make check-counts` |
-| New detection script not passing `shellcheck -x` | Fix all shellcheck warnings before committing |
-| Detection added to `diagnose.sh` but not to `SKILL.md` or `README.md` pattern table | Update both docs |
-| TODO/FIXME in script comments older than current sprint | Implement or remove it |
+*clawdoc/CLAUDE.md v2.0 — 2026-04-02*
 
